@@ -1,1 +1,604 @@
-<meta http-equiv="refresh" content="0;
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Montaj Takip - İsa Keleş</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: #f1f5f9; color: #1e293b; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; padding: 16px 16px 80px 16px; }
+        .header { text-align: center; margin-bottom: 24px; }
+        .header h1 { font-size: 28px; background: linear-gradient(135deg, #f59e0b, #f97316); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .header p { font-size: 12px; color: #64748b; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
+        .stat-card { background: #ffffff; border-radius: 20px; padding: 12px 8px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .stat-number { font-size: 28px; font-weight: 800; color: #f59e0b; }
+        .stat-label { font-size: 11px; color: #64748b; margin-top: 6px; }
+        .search-box { background: #ffffff; border-radius: 30px; padding: 12px 18px; border: 1px solid #e2e8f0; margin-bottom: 16px; display: flex; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .search-box input { background: transparent; border: none; color: #1e293b; font-size: 15px; flex: 1; outline: none; }
+        .filter-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+        .filter-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 40px; padding: 8px 16px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .filter-btn.active { background: #f59e0b; color: white; border-color: #f59e0b; }
+        .project-card { background: #ffffff; border-radius: 24px; padding: 16px; margin-bottom: 12px; border: 1px solid #e2e8f0; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.07); }
+        .project-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .customer-name { font-size: 18px; font-weight: 700; color: #1e293b; }
+        .status-badge { font-size: 10px; padding: 4px 10px; border-radius: 30px; font-weight: 700; }
+        .status-basladi { background: #3b82f6; color: white; border: 1px solid #3b82f6; }
+        .status-devam { background: #22c55e; color: white; border: 1px solid #22c55e; }
+        .status-ara-verildi { background: #f97316; color: white; border: 1px solid #f97316; }
+        .status-bitti { background: #ef4444; color: white; border: 1px solid #ef4444; }
+        .project-location { font-size: 13px; color: #64748b; margin-bottom: 8px; }
+        .project-footer { display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; padding: 8px 20px 20px; box-shadow: 0 -2px 12px rgba(0,0,0,0.08); }
+        .nav-item { flex: 1; text-align: center; padding: 8px; color: #94a3b8; font-weight: 600; font-size: 12px; cursor: pointer; border-radius: 30px; }
+        .nav-item.active { color: #f59e0b; background: #fff7ed; }
+        .section { background: #ffffff; border-radius: 20px; padding: 16px; margin-bottom: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .section-title { font-weight: 700; color: #f59e0b; margin-bottom: 12px; font-size: 14px; border-left: 3px solid #f59e0b; padding-left: 10px; }
+        input, select, textarea { width: 100%; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; color: #1e293b; font-size: 14px; margin-bottom: 12px; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #f59e0b; }
+        button { background: linear-gradient(135deg, #f59e0b, #f97316); color: white; border: none; padding: 14px; border-radius: 30px; font-weight: 700; font-size: 16px; width: 100%; cursor: pointer; margin-top: 8px; box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
+        .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+        .measure-item { flex: 1; min-width: 100px; }
+        .measure-label { font-size: 11px; color: #64748b; margin-bottom: 4px; font-weight: 600; }
+        .durum-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        .durum-btn { flex: 1; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 40px; padding: 10px; font-weight: bold; text-align: center; cursor: pointer; color: #64748b; }
+        .durum-btn[data-durum="basladi"].active { background: #3b82f6; color: white; border-color: #3b82f6; }
+        .durum-btn[data-durum="devam"].active { background: #22c55e; color: white; border-color: #22c55e; }
+        .durum-btn[data-durum="ara verildi"].active { background: #f97316; color: white; border-color: #f97316; }
+        .durum-btn[data-durum="bitti"].active { background: #ef4444; color: white; border-color: #ef4444; }
+        .loc-btn { background: #3b82f6; margin-top: 0; margin-bottom: 12px; color: white; box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+        .map-link { background: #22c55e; display: inline-block; text-align: center; text-decoration: none; color: white; margin-top: 8px; box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
+        .sn-box { background: #f8fafc; padding: 10px; border-radius: 14px; margin-bottom: 10px; border: 1px solid #e2e8f0; }
+        .kapi-item { background: #f8fafc; padding: 10px; border-radius: 14px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
+        .back-btn { background: transparent; color: #f59e0b; text-align: left; padding: 0; margin-bottom: 12px; box-shadow: none; font-size: 14px; width: auto; }
+        .date-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .devam-btn { background: #64748b; color: white; margin-left: auto; padding: 8px 12px; width: auto; box-shadow: none; font-size: 13px; }
+        .masraf-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .masraf-label { font-size: 13px; color: #64748b; min-width: 120px; font-weight: 600; }
+        .masraf-row input { margin-bottom: 0; flex: 1; }
+        .masraf-toplam { background: linear-gradient(135deg, #fff7ed, #fef3c7); border-radius: 14px; padding: 12px; margin-top: 8px; text-align: center; font-size: 16px; color: #f59e0b; font-weight: 700; border: 1px solid #fed7aa; }
+        #syncBar { position: fixed; top: 0; left: 0; right: 0; text-align: center; font-size: 13px; font-weight: 600; padding: 6px; z-index: 10000; display: none; }
+        .sync-ok { background: #22c55e; color: white; }
+        .sync-loading { background: #f59e0b; color: white; }
+        .sync-err { background: #ef4444; color: white; }
+    </style>
+</head>
+<body>
+<div id="syncBar"></div>
+<div id="app" style="display:none;"></div>
+
+<div id="sifreEkrani" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f1f5f9;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;">
+    <div style="font-size:48px;margin-bottom:16px;">🔐</div>
+    <h2 style="background:linear-gradient(135deg,#f59e0b,#f97316);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:8px;">Montaj Takip</h2>
+    <p style="color:#64748b;font-size:13px;margin-bottom:32px;">İsa Keleş</p>
+    <input type="password" id="sifreInput" placeholder="Şifre girin" style="width:100%;max-width:300px;padding:14px;background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;color:#1e293b;font-size:16px;text-align:center;margin-bottom:12px;">
+    <div id="sifreHata" style="color:#ef4444;font-size:13px;margin-bottom:12px;display:none;">❌ Yanlış şifre!</div>
+    <button onclick="sifreKontrol()" style="width:100%;max-width:300px;background:#f59e0b;color:#0a0d14;border:none;padding:14px;border-radius:30px;font-weight:700;font-size:16px;cursor:pointer;">GİRİŞ</button>
+</div>
+
+<script>
+    // Firebase
+    firebase.initializeApp({
+        apiKey: "AIzaSyC_placeholder_will_work_with_databaseURL",
+        databaseURL: "https://montajtakip-dec96-default-rtdb.firebaseio.com"
+    });
+    const db = firebase.database();
+    const kayitlarRef = db.ref('kayitlar');
+
+    const SIFRE = 'Keleş42';
+    const SIFRE_SURE = 24 * 60 * 60 * 1000;
+    let records = [];
+    let currentPage = 'list';
+    let editId = null;
+    let currentFilter = 'all';
+    let searchText = '';
+
+    function syncGoster(durum, sure = 2000) {
+        const bar = document.getElementById('syncBar');
+        if (!bar) return;
+        if (durum === 'ok') { bar.textContent = '☁️ Buluta kaydedildi'; bar.className = 'sync-ok'; }
+        else if (durum === 'yukleniyor') { bar.textContent = '⏳ Kaydediliyor...'; bar.className = 'sync-loading'; }
+        else { bar.textContent = '❌ Bağlantı hatası - yerel kaydedildi'; bar.className = 'sync-err'; sure = 3000; }
+        bar.style.display = 'block';
+        if (durum !== 'yukleniyor') setTimeout(() => { bar.style.display = 'none'; }, sure);
+    }
+
+    function sifreKontrol() {
+        const girilen = document.getElementById('sifreInput').value;
+        if (girilen === SIFRE) {
+            localStorage.setItem('sifre_zaman', Date.now().toString());
+            document.getElementById('sifreEkrani').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            baslat();
+        } else {
+            document.getElementById('sifreHata').style.display = 'block';
+            document.getElementById('sifreInput').value = '';
+        }
+    }
+
+    function sifreKontrolEt() {
+        const zaman = localStorage.getItem('sifre_zaman');
+        if (zaman && (Date.now() - parseInt(zaman)) < SIFRE_SURE) {
+            document.getElementById('sifreEkrani').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            return true;
+        }
+        document.getElementById('sifreEkrani').style.display = 'flex';
+        document.getElementById('app').style.display = 'none';
+        document.getElementById('sifreInput').addEventListener('keydown', e => { if(e.key==='Enter') sifreKontrol(); });
+        return false;
+    }
+
+    function baslat() {
+        document.getElementById('app').innerHTML = '<div style="text-align:center;padding:60px;color:#94a3b8;">☁️ Veriler yükleniyor...</div>';
+        kayitlarRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            records = data ? Object.values(data).sort((a,b) => b.id - a.id) : [];
+            localStorage.setItem('asansor_isa_full', JSON.stringify(records));
+            if (currentPage === 'list') renderList();
+            else if (currentPage === 'stats') renderStats();
+        }, (error) => {
+            // Offline - yerel veriyi kullan
+            const yerel = localStorage.getItem('asansor_isa_full');
+            records = yerel ? JSON.parse(yerel) : [];
+            renderList();
+        });
+    }
+
+    function formatDate() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+    function formatDateTR(s) {
+        if (!s) return '';
+        const p = s.split('-');
+        return `${p[2]}/${p[1]}/${p[0]}`;
+    }
+    function getStats() {
+        return {
+            total: records.length,
+            active: records.filter(r => r.durum==='basladi'||r.durum==='devam').length,
+            paused: records.filter(r => r.durum==='ara verildi').length,
+            completed: records.filter(r => r.durum==='bitti').length
+        };
+    }
+    const durumSira = { 'devam': 0, 'ara verildi': 1, 'basladi': 2, 'bitti': 3 };
+    function getFilteredRecords() {
+        return records.filter(rec => {
+            if (currentFilter !== 'all' && rec.durum !== currentFilter) return false;
+            if (searchText.trim()) {
+                const txt = searchText.toLowerCase();
+                return (rec.musteri&&rec.musteri.toLowerCase().includes(txt))||(rec.binaAdi&&rec.binaAdi.toLowerCase().includes(txt))||(rec.adres&&rec.adres.toLowerCase().includes(txt))||(rec.marka&&rec.marka.toLowerCase().includes(txt));
+            }
+            return true;
+        }).sort((a,b) => (durumSira[a.durum]??9)-(durumSira[b.durum]??9));
+    }
+
+    function renderList() {
+        const filtered = getFilteredRecords();
+        const stats = getStats();
+        let html = `<div class="header"><h1>🏗️ Montaj Takip</h1><p>ASANSÖR YÖNETİM SİSTEMİ</p></div>
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-number">${stats.total}</div><div class="stat-label">TOPLAM</div></div>
+            <div class="stat-card"><div class="stat-number">${stats.active}</div><div class="stat-label">AKTİF</div></div>
+            <div class="stat-card"><div class="stat-number">${stats.paused}</div><div class="stat-label">ARA VERİLDİ</div></div>
+            <div class="stat-card"><div class="stat-number">${stats.completed}</div><div class="stat-label">BİTEN</div></div>
+        </div>
+        <div class="search-box"><span>🔍</span><input type="text" id="globalSearch" placeholder="Bina, adres, müşteri, marka ara..." value="${searchText.replace(/"/g,'&quot;')}"></div>
+        <div class="filter-buttons">
+            <button class="filter-btn ${currentFilter==='all'?'active':''}" data-filter="all">Hepsi (${records.length})</button>
+            <button class="filter-btn ${currentFilter==='basladi'?'active':''}" data-filter="basladi">Başladı</button>
+            <button class="filter-btn ${currentFilter==='devam'?'active':''}" data-filter="devam">Devam Ediyor</button>
+            <button class="filter-btn ${currentFilter==='ara verildi'?'active':''}" data-filter="ara verildi">Ara Verildi</button>
+            <button class="filter-btn ${currentFilter==='bitti'?'active':''}" data-filter="bitti">Bitti</button>
+        </div><div id="projectList">`;
+        if (!filtered.length) html += `<div style="text-align:center;padding:40px;color:#4a5568;">📭 Kayıt bulunamadı</div>`;
+        else filtered.forEach(rec => {
+            const dc = rec.durum==='basladi'?'basladi':rec.durum==='devam'?'devam':rec.durum==='ara verildi'?'ara-verildi':'bitti';
+            const badge = rec.durum==='basladi'?'BAŞLADI':rec.durum==='devam'?'DEVAM':rec.durum==='ara verildi'?'ARA VERİLDİ':'BİTTİ';
+            html += `<div class="project-card" onclick="goToDetail('${rec.id}')">
+                <div class="project-header"><span class="customer-name">${escapeHtml(rec.musteri)||'İsimsiz'}</span><span class="status-badge status-${dc}">${badge}</span></div>
+                <div class="project-location">📍 ${escapeHtml(rec.adres)||'-'}</div>
+                <div class="project-footer"><span>🏢 ${escapeHtml(rec.binaAdi)||'-'}</span><span>📅 ${rec.baslamaTarihi?formatDateTR(rec.baslamaTarihi):'-'}</span></div>
+            </div>`;
+        });
+        html += `</div><div class="bottom-nav">
+            <div class="nav-item ${currentPage==='list'?'active':''}" onclick="changePage('list')">📋 LİSTE</div>
+            <div class="nav-item" onclick="newRecord()">➕ YENİ</div>
+            <div class="nav-item" onclick="changePage('stats')">📊 İSTATİSTİK</div>
+        </div>`;
+        document.getElementById('app').innerHTML = html;
+        document.getElementById('globalSearch')?.addEventListener('input', e => { searchText = e.target.value; renderList(); });
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.addEventListener('click', () => { currentFilter = btn.getAttribute('data-filter'); renderList(); }));
+    }
+
+    function renderStats() {
+        const stats = getStats();
+        const ds = { basladi: records.filter(r=>r.durum==='basladi').length, devam: records.filter(r=>r.durum==='devam').length, 'ara verildi': records.filter(r=>r.durum==='ara verildi').length, bitti: records.filter(r=>r.durum==='bitti').length };
+        const toplamMasraf = records.reduce((s,r) => s+(parseFloat(r.masrafYol)||0)+(parseFloat(r.masrafYemek)||0)+(parseFloat(r.masrafExtra)||0), 0);
+        document.getElementById('app').innerHTML = `<div style="margin-bottom:20px;"><button class="back-btn" onclick="changePage('list')">← Geri</button></div>
+            <div class="header"><h1>📊 İstatistikler</h1></div>
+            <div class="stats-grid" style="grid-template-columns:repeat(2,1fr);">
+                <div class="stat-card"><div class="stat-number">${stats.total}</div><div class="stat-label">Toplam</div></div>
+                <div class="stat-card"><div class="stat-number">${stats.active}</div><div class="stat-label">Aktif</div></div>
+                <div class="stat-card"><div class="stat-number">${ds.basladi}</div><div class="stat-label">Başladı</div></div>
+                <div class="stat-card"><div class="stat-number">${ds.devam}</div><div class="stat-label">Devam</div></div>
+                <div class="stat-card"><div class="stat-number">${ds['ara verildi']}</div><div class="stat-label">Ara Verildi</div></div>
+                <div class="stat-card"><div class="stat-number">${ds.bitti}</div><div class="stat-label">Tamamlanan</div></div>
+            </div>
+            <div class="section"><div class="section-title">💰 TOPLAM MASRAFLAR</div><div class="masraf-toplam">${toplamMasraf.toFixed(2)} ₺</div></div>
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="changePage('list')">📋 LİSTE</div>
+                <div class="nav-item" onclick="newRecord()">➕ YENİ</div>
+                <div class="nav-item active" onclick="changePage('stats')">📊 İSTATİSTİK</div>
+            </div>`;
+    }
+
+    function renderForm(record) {
+        if (!record) record = {
+            id: Date.now().toString(), durum: 'basladi', musteri: '', telefon: '', binaAdi: '', adres: '', konum: '',
+            baslamaTarihi: formatDate(), bitisTarihi: '', kapasite: '', tip: 'Dişlili (Makine Daireli)', marka: '', notlar: '',
+            kuyuG:'',kuyuD:'',kuyuY:'',kuyuDibi:'',tavanArasi:'',rayBoyu:'',
+            anaRayGenislik:'',agirlikRayGenislik:'',rayKapiOlcu:'',ikiMerkezOlcu:'',
+            rayKapiToplam:'',kapiModeli:'Teleskopik',agirlikYeri:'Arkadan Ağırlık',
+            kapiYonu:'Sağ',teleskopikKayma:'',kaymaYonu:'Sağa',durakSayisi:1,
+            motorM:'',motorS:'',panoM:'',panoS:'',kabinM:'',kabinS:'',
+            regulatorM:'',regulatorS:'',frenM:'',frenS:'',kabinTamponM:'',kabinTamponS:'',agirlikTamponM:'',agirlikTamponS:'',
+            kapilar:[],masrafYol:'',masrafYemek:'',masrafExtraAdi:'',masrafExtra:'',
+            kacKisilik:'',kapiTipi:'',rayMarkasi:'',rayMatka:'',kapiDetay:''
+        };
+        editId = record.id;
+        const bitisDate = (record.bitisTarihi && record.bitisTarihi !== 'Devam ediyor') ? record.bitisTarihi : '';
+        document.getElementById('app').innerHTML = `
+        <div style="margin-bottom:12px;"><button class="back-btn" onclick="changePage('list')">← Listeye Dön</button></div>
+        <div class="section"><div class="section-title">📌 DURUM</div>
+        <div class="durum-buttons">
+            <div class="durum-btn ${record.durum==='basladi'?'active':''}" data-durum="basladi">Başladı</div>
+            <div class="durum-btn ${record.durum==='devam'?'active':''}" data-durum="devam">Devam Ediyor</div>
+            <div class="durum-btn ${record.durum==='ara verildi'?'active':''}" data-durum="ara verildi">Ara Verildi</div>
+            <div class="durum-btn ${record.durum==='bitti'?'active':''}" data-durum="bitti">Bitti</div>
+        </div></div>
+        <div class="section"><div class="section-title">👤 MÜŞTERİ BİLGİSİ</div>
+        <input type="text" id="musteri" placeholder="AD SOYAD" value="${escapeHtml(record.musteri)}">
+        <input type="tel" id="telefon" placeholder="TELEFON" value="${escapeHtml(record.telefon)}">
+        </div>
+        <div class="section"><div class="section-title">📅 İŞ BAŞLAMA TARİHİ</div>
+        <input type="date" id="baslamaTarihi" value="${record.baslamaTarihi||formatDate()}">
+        </div>
+        <div class="section"><div class="section-title">📅 İŞ BİTİŞ TARİHİ</div>
+        <div class="date-row">
+            <input type="date" id="bitisTarihiDate" value="${bitisDate}" style="flex:2;">
+            <button type="button" class="devam-btn" id="devamBtn" style="flex:1;">Devam ediyor</button>
+        </div>
+        <input type="hidden" id="bitisTarihi" value="${record.bitisTarihi||''}">
+        </div>
+        <div class="section"><div class="section-title">🏢 BİNA & ADRES</div>
+        <input type="text" id="binaAdi" placeholder="Bina Adı" value="${escapeHtml(record.binaAdi)}">
+        <textarea id="adres" placeholder="Tam Adres" rows="3">${escapeHtml(record.adres)}</textarea>
+        <button class="loc-btn" id="konumBtn" onclick="getLocationAndSave()">📍 Konum Al</button>
+        <input type="hidden" id="konum" value="${record.konum||''}">
+        <div id="konumMapDiv" style="display:${record.konum?'block':'none'};">
+            <a id="konumMapLink" href="https://www.google.com/maps?q=${record.konum||''}" target="_blank" class="loc-btn map-link" style="display:block;text-align:center;margin-top:8px;">🗺️ Haritada Aç</a>
+        </div>
+        <div id="konumAlindi" style="display:${record.konum?'block':'none'};color:#22c55e;font-size:13px;margin-top:4px;">✅ Konum kaydedildi</div>
+        </div>
+        <div class="section"><div class="section-title">⚙️ ASANSÖR ÖZELLİKLERİ</div>
+        <select id="tip" onchange="tipDegisti()">
+            <option value="Dişlili (Makine Daireli)" ${record.tip==='Dişlili (Makine Daireli)'?'selected':''}>Dişlili (Makine Daireli)</option>
+            <option value="Dişlisiz (Makine Dairesiz)" ${record.tip==='Dişlisiz (Makine Dairesiz)'?'selected':''}>Dişlisiz (Makine Dairesiz)</option>
+            <option value="Ray Kapı" ${record.tip==='Ray Kapı'?'selected':''}>Ray Kapı</option>
+            <option value="Hidrolik" ${record.tip==='Hidrolik'?'selected':''}>Hidrolik</option>
+        </select>
+        <div id="normalAsansorAlani">
+            <div class="row">
+                <div style="flex:1;"><div class="measure-label">Kapasite (KG)</div><input type="text" id="kapasite" placeholder="KG" value="${escapeHtml(record.kapasite)}" style="margin-bottom:0;"></div>
+                <div style="flex:1;"><div class="measure-label">Kaç Kişilik</div><input type="text" id="kacKisilik" placeholder="Kişi" value="${escapeHtml(record.kacKisilik||'')}" style="margin-bottom:0;"></div>
+            </div>
+            <input type="text" id="marka" placeholder="Asansör Markası" value="${escapeHtml(record.marka)}" style="margin-top:12px;">
+            <input type="text" id="kapiTipi" placeholder="Kapı Tipi" value="${escapeHtml(record.kapiTipi||'')}">
+            <div class="measure-label" style="margin-bottom:4px;">Kat Sayısı</div>
+            <input type="number" id="durakSayisi" placeholder="Kat Sayısı" value="${record.durakSayisi||1}" oninput="updateKapilar(this.value)">
+        </div></div>
+        <div class="section" id="olcuBolumu"><div class="section-title">📐 ÖLÇÜLER</div>
+            <div id="normalOlculer">
+                <div class="row">
+                    <div class="measure-item"><div class="measure-label">Kuyu Genişlik (cm)</div><input type="number" id="kuyuG" placeholder="cm" value="${record.kuyuG||''}"></div>
+                    <div class="measure-item"><div class="measure-label">Kuyu Derinlik (cm)</div><input type="number" id="kuyuD" placeholder="cm" value="${record.kuyuD||''}"></div>
+                    <div class="measure-item"><div class="measure-label">Kuyu Yükseklik (MT)</div><input type="number" id="kuyuY" placeholder="MT" value="${record.kuyuY||''}"></div>
+                </div>
+                <div class="row">
+                    <div class="measure-item"><div class="measure-label">Kuyu Dibi (cm)</div><input type="number" id="kuyuDibi" placeholder="cm" value="${record.kuyuDibi||''}"></div>
+                    <div class="measure-item"><div class="measure-label">Tavan Arası (cm)</div><input type="number" id="tavanArasi" placeholder="cm" value="${record.tavanArasi||''}"></div>
+                    <div class="measure-item"><div class="measure-label">Ray Boyu (MT)</div><input type="number" id="rayBoyu" placeholder="MT" value="${record.rayBoyu||''}"></div>
+                </div>
+            </div>
+            <div id="rayKapiOlculer" style="display:none;">
+                <div class="row">
+                    <div class="measure-item"><div class="measure-label">Ray Markası</div><input type="text" id="rayMarkasi" placeholder="Ray Markası" value="${escapeHtml(record.rayMarkasi||'')}"></div>
+                    <div class="measure-item"><div class="measure-label">Kapı Markası</div><input type="text" id="rayMatka" placeholder="Kapı Markası" value="${escapeHtml(record.rayMatka||'')}"></div>
+                </div>
+                <div class="row">
+                    <div class="measure-item" style="flex:2;"><div class="measure-label">Kapı Tipi</div><input type="text" id="kapiDetay" placeholder="Kapı Tipi yazın" value="${escapeHtml(record.kapiDetay||'')}"></div>
+                </div>
+                <div class="row">
+                    <div class="measure-item"><div class="measure-label">Ana Ray Genişliği (cm)</div><input type="number" id="anaRayGenislik" placeholder="cm" value="${record.anaRayGenislik||''}"></div>
+                    <div class="measure-item"><div class="measure-label">Ağırlık Ray Genişliği (cm)</div><input type="number" id="agirlikRayGenislik" placeholder="cm" value="${record.agirlikRayGenislik||''}"></div>
+                </div>
+                <div class="row">
+                    <div class="measure-item"><div class="measure-label">Ray Kapı Ölçüsü (cm)</div><input type="number" id="rayKapiOlcu" placeholder="cm" value="${record.rayKapiOlcu||''}"></div>
+                    <div class="measure-item"><div class="measure-label">İki Merkez Ölçüsü (cm)</div><input type="number" id="ikiMerkezOlcu" placeholder="cm" value="${record.ikiMerkezOlcu||''}"></div>
+                </div>
+                <div class="row">
+                    <div class="measure-item"><div class="measure-label">Toplam Ray Boyu (cm)</div><input type="number" id="rayKapiToplam" placeholder="cm" value="${record.rayKapiToplam||''}"></div>
+                </div>
+                <div class="row">
+                    <div class="measure-item"><div class="measure-label">Kapı Modeli</div>
+                        <select id="kapiModeli">
+                            <option value="Teleskopik" ${(record.kapiModeli||'Teleskopik')==='Teleskopik'?'selected':''}>Teleskopik</option>
+                            <option value="Merkezi" ${record.kapiModeli==='Merkezi'?'selected':''}>Merkezi</option>
+                        </select>
+                    </div>
+                    <div class="measure-item"><div class="measure-label">Ağırlık Yeri</div>
+                        <select id="agirlikYeri">
+                            <option value="Arkadan Ağırlık" ${(record.agirlikYeri||'Arkadan Ağırlık')==='Arkadan Ağırlık'?'selected':''}>Arkadan Ağırlık</option>
+                            <option value="Yandan Ağırlık" ${record.agirlikYeri==='Yandan Ağırlık'?'selected':''}>Yandan Ağırlık</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="measure-item"><div class="measure-label">Kapı Yönü</div>
+                        <select id="kapiYonu"><option ${(record.kapiYonu||'Sağ')==='Sağ'?'selected':''}>Sağ</option><option ${record.kapiYonu==='Sol'?'selected':''}>Sol</option></select>
+                    </div>
+                    <div class="measure-item"><div class="measure-label">Teleskopik Kayma (cm)</div><input type="number" id="teleskopikKayma" placeholder="cm" value="${record.teleskopikKayma||''}"></div>
+                    <div class="measure-item"><div class="measure-label">Kayma Yönü</div>
+                        <select id="kaymaYonu"><option ${(record.kaymaYonu||'Sağa')==='Sağa'?'selected':''}>Sağa</option><option ${record.kaymaYonu==='Sola'?'selected':''}>Sola</option></select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="seriNoBolumu" class="section"><div class="section-title">🔢 SERİ NUMARALARI</div>
+            <div class="sn-box"><b>Motor</b><div class="row"><input type="text" id="motorM" placeholder="Marka" value="${escapeHtml(record.motorM)}"><input type="text" id="motorS" placeholder="Seri No" value="${escapeHtml(record.motorS)}"></div></div>
+            <div class="sn-box"><b>Pano</b><div class="row"><input type="text" id="panoM" placeholder="Marka" value="${escapeHtml(record.panoM)}"><input type="text" id="panoS" placeholder="Seri No" value="${escapeHtml(record.panoS)}"></div></div>
+            <div class="sn-box"><b>Kabin</b><div class="row"><input type="text" id="kabinM" placeholder="Marka" value="${escapeHtml(record.kabinM)}"><input type="text" id="kabinS" placeholder="Seri No" value="${escapeHtml(record.kabinS)}"></div></div>
+            <div class="sn-box"><b>Regülatör</b><div class="row"><input type="text" id="regulatorM" placeholder="Marka" value="${escapeHtml(record.regulatorM)}"><input type="text" id="regulatorS" placeholder="Seri No" value="${escapeHtml(record.regulatorS)}"></div></div>
+            <div class="sn-box"><b>Fren Çakısı</b><div class="row"><input type="text" id="frenM" placeholder="Marka" value="${escapeHtml(record.frenM)}"><input type="text" id="frenS" placeholder="Seri No" value="${escapeHtml(record.frenS)}"></div></div>
+            <div class="sn-box"><b>Kabin Tampon</b><div class="row"><input type="text" id="kabinTamponM" placeholder="Marka" value="${escapeHtml(record.kabinTamponM)}"><input type="text" id="kabinTamponS" placeholder="Seri No" value="${escapeHtml(record.kabinTamponS)}"></div></div>
+            <div class="sn-box"><b>Ağırlık Tampon</b><div class="row"><input type="text" id="agirlikTamponM" placeholder="Marka" value="${escapeHtml(record.agirlikTamponM)}"><input type="text" id="agirlikTamponS" placeholder="Seri No" value="${escapeHtml(record.agirlikTamponS)}"></div></div>
+        </div>
+        <div class="section" id="kapilarBolumu"><div class="section-title">🚪 KAPILAR</div><div id="kapilarDiv"></div></div>
+        <div class="section"><div class="section-title">📝 NOTLAR</div>
+        <textarea id="notlar" placeholder="Ekstra işler, hatırlatmalar, yapılanlar..." rows="4">${escapeHtml(record.notlar)}</textarea>
+        </div>
+        <div class="section"><div class="section-title">💰 MASRAFLAR</div>
+            <div class="masraf-row"><span class="masraf-label">🚗 Yol / Yakıt</span><input type="number" id="masrafYol" placeholder="₺" value="${record.masrafYol||''}" oninput="masrafHesapla()"></div>
+            <div class="masraf-row"><span class="masraf-label">🍽️ Yemek</span><input type="number" id="masrafYemek" placeholder="₺" value="${record.masrafYemek||''}" oninput="masrafHesapla()"></div>
+            <div style="margin-bottom:12px;">
+                <div style="font-size:13px;color:#94a3b8;font-weight:600;margin-bottom:8px;">➕ Extra Masraf</div>
+                <input type="text" id="masrafExtraAdi" placeholder="Ne masrafı? (açıklama)" value="${escapeHtml(record.masrafExtraAdi||'')}">
+                <input type="number" id="masrafExtra" placeholder="Tutar (₺)" value="${record.masrafExtra||''}" oninput="masrafHesapla()">
+            </div>
+            <div class="masraf-toplam" id="masrafToplam">Toplam: ${((parseFloat(record.masrafYol||0))+(parseFloat(record.masrafYemek||0))+(parseFloat(record.masrafExtra||0))).toFixed(2)} ₺</div>
+        </div>
+        <button onclick="saveRecord()">💾 KAYDET</button>`;
+
+        updateKapilar(record.durakSayisi||1, record.kapilar);
+        tipDegisti();
+
+        document.querySelectorAll('.durum-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.durum-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('durumHidden')?.remove();
+                const h = document.createElement('input');
+                h.type='hidden'; h.id='durumHidden'; h.value=btn.getAttribute('data-durum');
+                document.querySelector('.durum-buttons').after(h);
+            });
+        });
+        if (!document.getElementById('durumHidden')) {
+            const h = document.createElement('input');
+            h.type='hidden'; h.id='durumHidden'; h.value=record.durum;
+            document.querySelector('.durum-buttons').after(h);
+        }
+        const di = document.getElementById('bitisTarihiDate');
+        const hb = document.getElementById('bitisTarihi');
+        document.getElementById('devamBtn')?.addEventListener('click', () => { di.value=''; hb.value='Devam ediyor'; });
+        di?.addEventListener('change', () => { hb.value = di.value||''; });
+        if (record.bitisTarihi==='Devam ediyor') { di.value=''; hb.value='Devam ediyor'; }
+        else if (record.bitisTarihi) { di.value=record.bitisTarihi; hb.value=record.bitisTarihi; }
+    }
+
+    window.masrafHesapla = function() {
+        const y=parseFloat(document.getElementById('masrafYol')?.value||0);
+        const m=parseFloat(document.getElementById('masrafYemek')?.value||0);
+        const e=parseFloat(document.getElementById('masrafExtra')?.value||0);
+        const el=document.getElementById('masrafToplam');
+        if(el) el.textContent=`Toplam: ${(y+m+e).toFixed(2)} ₺`;
+    };
+
+    window.tipDegisti = function() {
+        const isRay = document.getElementById('tip').value === 'Ray Kapı';
+        ['normalAsansorAlani','seriNoBolumu','normalOlculer'].forEach(id => { const el=document.getElementById(id); if(el) el.style.display=isRay?'none':'block'; });
+        const rk=document.getElementById('rayKapiOlculer'); if(rk) rk.style.display=isRay?'block':'none';
+        const kb=document.getElementById('kapilarBolumu'); if(kb) kb.style.display=isRay?'none':'block';
+    };
+
+    window.updateKapilar = function(n, existing=null) {
+        const container=document.getElementById('kapilarDiv'); if(!container) return;
+        let kapilar=existing||(editId?records.find(r=>r.id===editId)?.kapilar||[]:[]);
+        container.innerHTML='';
+        for(let i=1;i<=n;i++){const k=kapilar[i-1]||{m:'',s:''};container.innerHTML+=`<div class="kapi-item"><b>Kat ${i}</b><div class="row"><input type="text" class="kapiMarka" placeholder="Marka" value="${escapeHtml(k.m)}"><input type="text" class="kapiSeri" placeholder="Seri No" value="${escapeHtml(k.s)}"></div></div>`;}
+    };
+
+    function getLocationAndSave() {
+        const btn=document.getElementById('konumBtn');
+        if(!navigator.geolocation){alert('❌ Tarayıcınız konum desteklemiyor.');return;}
+        if(btn){btn.textContent='⏳ Konum alınıyor...';btn.disabled=true;}
+        const dene=(highAcc)=>{
+            navigator.geolocation.getCurrentPosition(
+                (pos)=>{
+                    const loc=`${pos.coords.latitude},${pos.coords.longitude}`;
+                    const ki=document.getElementById('konum'); if(ki) ki.value=loc;
+                    const md=document.getElementById('konumMapDiv');
+                    if(md){md.style.display='block';document.getElementById('konumMapLink').href=`https://www.google.com/maps?q=${loc}`;}
+                    const ka=document.getElementById('konumAlindi'); if(ka) ka.style.display='block';
+                    if(btn){btn.textContent='📍 Konum Al';btn.disabled=false;}
+                },
+                (err)=>{
+                    if(highAcc){dene(false);return;}
+                    const msg=err.code===1?'Konum izni reddedildi. Tarayıcı ayarlarından izin verin.':err.code===2?'Konum alınamıyor. Telefonun konum özelliğini aç.':'Zaman aşımı, tekrar deneyin.';
+                    alert('❌ '+msg);
+                    if(btn){btn.textContent='📍 Konum Al';btn.disabled=false;}
+                },
+                {enableHighAccuracy:highAcc,timeout:highAcc?8000:15000,maximumAge:60000}
+            );
+        };
+        dene(true);
+    }
+
+    function saveRecord() {
+        const kapilar=[];
+        document.querySelectorAll('.kapi-item').forEach(item=>{kapilar.push({m:item.querySelector('.kapiMarka')?.value||'',s:item.querySelector('.kapiSeri')?.value||''});});
+        const durum=document.getElementById('durumHidden')?.value||'basladi';
+        let bitisTarihi=document.getElementById('bitisTarihi')?.value||'';
+        if(!bitisTarihi) bitisTarihi=document.getElementById('bitisTarihiDate')?.value||'';
+        const tip=document.getElementById('tip').value;
+        let rec={
+            id:editId,durum,tip,
+            musteri:document.getElementById('musteri').value,
+            telefon:document.getElementById('telefon').value,
+            binaAdi:document.getElementById('binaAdi').value,
+            adres:document.getElementById('adres').value,
+            konum:document.getElementById('konum').value,
+            baslamaTarihi:document.getElementById('baslamaTarihi').value,
+            bitisTarihi,
+            marka:document.getElementById('marka')?.value||'',
+            kapasite:document.getElementById('kapasite')?.value||'',
+            kacKisilik:document.getElementById('kacKisilik')?.value||'',
+            kapiTipi:document.getElementById('kapiTipi')?.value||'',
+            notlar:document.getElementById('notlar').value,
+            durakSayisi:document.getElementById('durakSayisi')?.value||1,
+            kapilar,
+            masrafYol:document.getElementById('masrafYol')?.value||'',
+            masrafYemek:document.getElementById('masrafYemek')?.value||'',
+            masrafExtraAdi:document.getElementById('masrafExtraAdi')?.value||'',
+            masrafExtra:document.getElementById('masrafExtra')?.value||''
+        };
+        if(tip==='Ray Kapı'){
+            rec.anaRayGenislik=document.getElementById('anaRayGenislik').value;
+            rec.agirlikRayGenislik=document.getElementById('agirlikRayGenislik').value;
+            rec.rayKapiOlcu=document.getElementById('rayKapiOlcu').value;
+            rec.ikiMerkezOlcu=document.getElementById('ikiMerkezOlcu').value;
+            rec.rayKapiToplam=document.getElementById('rayKapiToplam').value;
+            rec.kapiModeli=document.getElementById('kapiModeli').value;
+            rec.agirlikYeri=document.getElementById('agirlikYeri').value;
+            rec.kapiYonu=document.getElementById('kapiYonu').value;
+            rec.teleskopikKayma=document.getElementById('teleskopikKayma').value;
+            rec.kaymaYonu=document.getElementById('kaymaYonu').value;
+            rec.rayMarkasi=document.getElementById('rayMarkasi').value;
+            rec.rayMatka=document.getElementById('rayMatka').value;
+            rec.kapiDetay=document.getElementById('kapiDetay').value;
+            rec.kuyuG=rec.kuyuD=rec.kuyuY=rec.kuyuDibi=rec.tavanArasi=rec.rayBoyu='';
+            rec.motorM=rec.motorS=rec.panoM=rec.panoS=rec.kabinM=rec.kabinS='';
+            rec.regulatorM=rec.regulatorS=rec.frenM=rec.frenS='';
+            rec.kabinTamponM=rec.kabinTamponS=rec.agirlikTamponM=rec.agirlikTamponS='';
+            rec.kapilar=[];
+        } else {
+            rec.kuyuG=document.getElementById('kuyuG').value;rec.kuyuD=document.getElementById('kuyuD').value;
+            rec.kuyuY=document.getElementById('kuyuY').value;rec.kuyuDibi=document.getElementById('kuyuDibi').value;
+            rec.tavanArasi=document.getElementById('tavanArasi').value;rec.rayBoyu=document.getElementById('rayBoyu').value;
+            rec.motorM=document.getElementById('motorM').value;rec.motorS=document.getElementById('motorS').value;
+            rec.panoM=document.getElementById('panoM').value;rec.panoS=document.getElementById('panoS').value;
+            rec.kabinM=document.getElementById('kabinM').value;rec.kabinS=document.getElementById('kabinS').value;
+            rec.regulatorM=document.getElementById('regulatorM').value;rec.regulatorS=document.getElementById('regulatorS').value;
+            rec.frenM=document.getElementById('frenM').value;rec.frenS=document.getElementById('frenS').value;
+            rec.kabinTamponM=document.getElementById('kabinTamponM').value;rec.kabinTamponS=document.getElementById('kabinTamponS').value;
+            rec.agirlikTamponM=document.getElementById('agirlikTamponM').value;rec.agirlikTamponS=document.getElementById('agirlikTamponS').value;
+            rec.anaRayGenislik=rec.agirlikRayGenislik=rec.rayKapiOlcu=rec.ikiMerkezOlcu=rec.rayKapiToplam='';
+            rec.kapiModeli='Teleskopik';rec.agirlikYeri='Arkadan Ağırlık';rec.kapiYonu='Sağ';rec.teleskopikKayma='';rec.kaymaYonu='Sağa';
+            rec.rayMarkasi='';rec.rayMatka='';rec.kapiDetay='';
+        }
+        const idx=records.findIndex(r=>r.id===editId);
+        if(idx!==-1) records[idx]=rec; else records.unshift(rec);
+        localStorage.setItem('asansor_isa_full',JSON.stringify(records));
+        syncGoster('yukleniyor');
+        kayitlarRef.child(rec.id).set(rec).then(()=>syncGoster('ok')).catch(()=>syncGoster('hata'));
+        changePage('list');
+    }
+
+    function renderDetail(id) {
+        const rec=records.find(r=>r.id===id); if(!rec){changePage('list');return;}
+        let kapilarHtml='';
+        if(rec.tip!=='Ray Kapı'){
+            if(rec.kapilar?.length) rec.kapilar.forEach((k,i)=>{kapilarHtml+=`<div class="kapi-item">Kat ${i+1}: ${k.m||'-'} / Seri: ${k.s||'-'}</div>`;});
+            else kapilarHtml='<div class="kapi-item">Kapı bilgisi yok</div>';
+        }
+        const toplamMasraf=((parseFloat(rec.masrafYol||0))+(parseFloat(rec.masrafYemek||0))+(parseFloat(rec.masrafExtra||0))).toFixed(2);
+        let html=`<div style="margin-bottom:12px;"><button class="back-btn" onclick="changePage('list')">← Listeye Dön</button></div>
+        <div class="section"><div class="section-title">📄 MÜŞTERİ BİLGİSİ</div>
+        <div style="font-size:20px;font-weight:bold;">${escapeHtml(rec.musteri)}</div>
+        <div>📞 ${escapeHtml(rec.telefon)||'-'}</div><div>🏢 ${escapeHtml(rec.binaAdi)}</div>
+        <div>📌 ${escapeHtml(rec.adres)}</div>
+        ${rec.konum?`<a href="https://www.google.com/maps?q=${rec.konum}" target="_blank" class="loc-btn map-link" style="display:inline-block;margin-top:8px;">🗺️ Haritada Aç</a>`:''}
+        </div>
+        <div class="section"><div class="section-title">📅 BAŞLAMA</div><div>${rec.baslamaTarihi?formatDateTR(rec.baslamaTarihi):'-'}</div></div>
+        <div class="section"><div class="section-title">📅 BİTİŞ</div><div>${rec.bitisTarihi==='Devam ediyor'?'Devam ediyor':(rec.bitisTarihi?formatDateTR(rec.bitisTarihi):'Belirtilmemiş')}</div></div>
+        <div class="section"><div class="section-title">⚙️ ASANSÖR</div><div>Tip: ${rec.tip||'-'}</div>`;
+        if(rec.tip!=='Ray Kapı') html+=`<div>Kapasite: ${rec.kapasite||'-'} kg</div><div>Marka: ${rec.marka||'-'}</div><div>Durak: ${rec.durakSayisi||'-'}</div>`;
+        html+=`</div>`;
+        if(rec.tip==='Ray Kapı'){
+            html+=`<div class="section"><div class="section-title">📐 RAY KAPI ÖLÇÜLERİ</div>
+                <div>Ray Markası: ${rec.rayMarkasi||'-'}</div>
+                <div>Kapı Markası: ${rec.rayMatka||'-'}</div>
+                <div>Kapı Tipi: ${rec.kapiDetay||'-'}</div>
+                <div>Ana Ray Genişliği: ${rec.anaRayGenislik||'-'} cm</div>
+                <div>Ağırlık Ray Genişliği: ${rec.agirlikRayGenislik||'-'} cm</div>
+                <div>Ray Kapı Ölçüsü: ${rec.rayKapiOlcu||'-'} cm</div>
+                <div>İki Merkez Ölçüsü: ${rec.ikiMerkezOlcu||'-'} cm</div>
+                <div>Toplam Ray Boyu: ${rec.rayKapiToplam||'-'} cm</div>
+                <div>Kapı Modeli: ${rec.kapiModeli||'-'}</div>
+                <div>Ağırlık Yeri: ${rec.agirlikYeri||'-'}</div>
+                <div>Kapı Yönü: ${rec.kapiYonu||'-'}</div>
+                <div>Teleskopik Kayma: ${rec.teleskopikKayma||'-'} cm</div>
+                <div>Kayma Yönü: ${rec.kaymaYonu||'-'}</div>
+            </div>`;
+        } else {
+            html+=`<div class="section"><div class="section-title">📏 ÖLÇÜLER</div>
+                <div>Kuyu: ${rec.kuyuG||'0'} x ${rec.kuyuD||'0'} cm | Yükseklik: ${rec.kuyuY||'0'} MT</div>
+                <div>Kuyu Dibi: ${rec.kuyuDibi||'-'} cm | Tavan Arası: ${rec.tavanArasi||'-'} cm | Ray Boyu: ${rec.rayBoyu||'-'} MT</div>
+            </div>
+            <div class="section"><div class="section-title">🔢 SERİ NUMARALARI</div>
+                <div>Motor: ${rec.motorM||'-'} / ${rec.motorS||'-'}</div>
+                <div>Pano: ${rec.panoM||'-'} / ${rec.panoS||'-'}</div>
+                <div>Kabin: ${rec.kabinM||'-'} / ${rec.kabinS||'-'}</div>
+                <div>Regülatör: ${rec.regulatorM||'-'} / ${rec.regulatorS||'-'}</div>
+                <div>Fren Çakısı: ${rec.frenM||'-'} / ${rec.frenS||'-'}</div>
+                <div>Kabin Tampon: ${rec.kabinTamponM||'-'} / ${rec.kabinTamponS||'-'}</div>
+                <div>Ağırlık Tampon: ${rec.agirlikTamponM||'-'} / ${rec.agirlikTamponS||'-'}</div>
+            </div>
+            <div class="section"><div class="section-title">🚪 KAPILAR</div>${kapilarHtml}</div>`;
+        }
+        html+=`<div class="section"><div class="section-title">📝 NOTLAR</div><div style="white-space:pre-wrap;">${escapeHtml(rec.notlar)||'-'}</div></div>
+        <div class="section"><div class="section-title">💰 MASRAFLAR</div>
+            <div style="margin-bottom:8px;">🚗 Yol / Yakıt: <b>${rec.masrafYol?rec.masrafYol+' ₺':'-'}</b></div>
+            <div style="margin-bottom:8px;">🍽️ Yemek: <b>${rec.masrafYemek?rec.masrafYemek+' ₺':'-'}</b></div>
+            <div style="margin-bottom:8px;">➕ ${escapeHtml(rec.masrafExtraAdi)||'Extra'}: <b>${rec.masrafExtra?rec.masrafExtra+' ₺':'-'}</b></div>
+            <div class="masraf-toplam">Toplam: ${toplamMasraf} ₺</div>
+        </div>
+        <button onclick="editRecord('${rec.id}')">✏️ DÜZENLE</button>
+        <button onclick="deleteRecord('${rec.id}')" style="background:#dc2626;">🗑️ SİL</button>`;
+        document.getElementById('app').innerHTML=html;
+    }
+
+    function editRecord(id){const rec=records.find(r=>r.id===id);if(rec){currentPage='form';renderForm(rec);}}
+    function deleteRecord(id){if(confirm('Silmek istediğinize emin misiniz?')){records=records.filter(r=>r.id!==id);kayitlarRef.child(id).remove();localStorage.setItem('asansor_isa_full',JSON.stringify(records));changePage('list');}}
+    function newRecord(){changePage('form',null);}
+    function goToDetail(id){changePage('detail',id);}
+    function changePage(page,id=null){currentPage=page;if(page==='list')renderList();else if(page==='stats')renderStats();else if(page==='form')renderForm(null);else if(page==='detail'&&id)renderDetail(id);}
+    function escapeHtml(str){if(!str)return '';return str.replace(/[&<>]/g,m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;');}
+
+    if(sifreKontrolEt()){baslat();}
+</script>
+</body>
+</html>
