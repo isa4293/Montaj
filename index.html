@@ -189,6 +189,15 @@
         return `${p[2]}/${p[1]}/${p[0]}`;
     }
     const durumSira = { 'devam': 0, 'ara verildi': 1, 'basladi': 2, 'bitti': 3 };
+    function getStats() {
+        return {
+            total: records.length,
+            active: records.filter(r => r.durum==='basladi'||r.durum==='devam').length,
+            paused: records.filter(r => r.durum==='ara verildi').length,
+            completed: records.filter(r => r.durum==='bitti').length
+        };
+    }
+
     function getFilteredRecords() {
         return records.filter(rec => {
             if (currentFilter !== 'all' && rec.durum !== currentFilter) return false;
