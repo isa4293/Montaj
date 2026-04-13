@@ -55,6 +55,7 @@
         .back-btn { background: transparent; color: #f59e0b; text-align: left; padding: 0; margin-bottom: 12px; box-shadow: none; font-size: 14px; width: auto; }
         .date-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .devam-btn { background: #64748b; color: white; margin-left: auto; padding: 8px 12px; width: auto; box-shadow: none; font-size: 13px; }
+        .teslim-btn { background: #22c55e !important; color: white !important; }
         .masraf-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
         .masraf-label { font-size: 13px; color: #64748b; min-width: 120px; font-weight: 600; }
         .masraf-row input { margin-bottom: 0; flex: 1; }
@@ -106,6 +107,22 @@
 
 <script>
     // Firebase
+    // Telefon geri tuşu yönetimi
+    window.addEventListener('popstate', function(e) {
+        if (currentPage === 'list') {
+            // Ana sayfadaysa tarayıcı kapansın (normal davranış)
+            return;
+        } else if (currentPage === 'detail' || currentPage === 'form') {
+            e.preventDefault();
+            changePage('list');
+            history.pushState({page:'list'}, '', '');
+        } else if (currentPage === 'muhasebe') {
+            e.preventDefault();
+            changePage('list');
+            history.pushState({page:'list'}, '', '');
+        }
+    });
+
     firebase.initializeApp({
         apiKey: "AIzaSyC_placeholder_will_work_with_databaseURL",
         databaseURL: "https://montajtakip-dec96-default-rtdb.firebaseio.com"
@@ -209,11 +226,11 @@
         }).sort((a,b) => {
             const ds = (durumSira[a.durum]??9) - (durumSira[b.durum]??9);
             if (ds !== 0) return ds;
-            // Biten işler kendi içinde eski tarih üstte yeni tarih altta
+            // Biten işler: yeni tarih üstte, eski tarih altta
             if (a.durum === 'bitti' && b.durum === 'bitti') {
                 const ta = a.bitisTarihi && a.bitisTarihi !== 'Devam ediyor' ? a.bitisTarihi : '0';
                 const tb = b.bitisTarihi && b.bitisTarihi !== 'Devam ediyor' ? b.bitisTarihi : '0';
-                return ta > tb ? 1 : -1;
+                return tb > ta ? 1 : -1;
             }
             return 0;
         });
@@ -291,7 +308,7 @@
         <div class="section"><div class="section-title">📅 İŞ BİTİŞ TARİHİ</div>
         <div class="date-row">
             <input type="date" id="bitisTarihiDate" value="${bitisDate}" style="flex:2;">
-            <button type="button" class="devam-btn" id="devamBtn" style="flex:1;">${record.durum==='bitti'?'Teslim Edildi':'Devam ediyor'}</button>
+            <button type="button" class="devam-btn ${record.durum==='bitti'?'teslim-btn':''}" id="devamBtn" style="flex:1;">${record.durum==='bitti'?'Teslim Edildi':'Devam ediyor'}</button>
         </div>
         <input type="hidden" id="bitisTarihi" value="${record.bitisTarihi||''}">
         </div>
