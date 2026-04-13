@@ -212,7 +212,7 @@
     function renderList() {
         const filtered = getFilteredRecords();
         const stats = getStats();
-        let html = `<div class="header"><h1>🛗 Montaj Takip</h1><p>ASANSÖR YÖNETİM SİSTEMİ</p></div>
+        let html = `<div class="header"><h1>⚙️🛗 Montaj Takip</h1><p>ASANSÖR YÖNETİM SİSTEMİ</p></div>
         <div class="stats-grid">
             <div class="stat-card"><div class="stat-number">${stats.total}</div><div class="stat-label">TOPLAM</div></div>
             <div class="stat-card"><div class="stat-number">${stats.active}</div><div class="stat-label">AKTİF</div></div>
@@ -614,7 +614,7 @@
         ${rec.konum?`<a href="https://www.google.com/maps?q=${rec.konum}" target="_blank" class="loc-btn map-link" style="display:inline-block;margin-top:8px;">🗺️ Haritada Aç</a>`:''}
         </div>
         <div class="section"><div class="section-title">📅 BAŞLAMA</div><div>${rec.baslamaTarihi?formatDateTR(rec.baslamaTarihi):'-'}</div></div>
-        <div class="section"><div class="section-title">📅 BİTİŞ</div><div>${rec.bitisTarihi==='Devam ediyor'?'Devam ediyor':(rec.bitisTarihi?formatDateTR(rec.bitisTarihi):'Belirtilmemiş')}</div></div>
+        <div class="section"><div class="section-title">📅 BİTİŞ</div><div>${rec.durum==='bitti'?'✅ Teslim Edildi — '+(rec.bitisTarihi&&rec.bitisTarihi!=='Devam ediyor'?formatDateTR(rec.bitisTarihi):''):rec.bitisTarihi==='Devam ediyor'?'🔄 Devam Ediyor':(rec.bitisTarihi?formatDateTR(rec.bitisTarihi):'Belirtilmemiş')}</div></div>
         <div class="section"><div class="section-title">⚙️ ASANSÖR</div><div>Tip: ${rec.tip||'-'}</div>`;
         if(rec.tip!=='Ray Kapı') html+=`<div>Kapasite: ${rec.kapasite||'-'} kg</div><div>Marka: ${rec.marka||'-'}</div><div>Kat Sayısı: ${rec.durakSayisi||'-'}</div>`;
         html+=`<div>💰 Kat Başı Montaj Ücreti: ${(rec.katBasiFiyat||FIYATLAR[rec.tip]||0).toLocaleString('tr-TR')} ₺</div>`;
@@ -692,7 +692,8 @@
     }
 
     function renderMuhasebe() {
-        const odemeler = muhasebeData.odemeler ? Object.values(muhasebeData.odemeler).sort((a,b) => a.tarih < b.tarih ? 1 : -1) : [];
+        const muhasebeTab = window._muhasebeTab || 'isler';
+        const odemeler = muhasebeData.odemeler ? Object.values(muhasebeData.odemeler).sort((a,b) => b.tarih > a.tarih ? 1 : -1) : [];
         const toplamOdeme = odemeler.reduce((s,o) => s + (parseFloat(o.tutar)||0), 0);
         const bitenIsler = records.filter(r => r.durum === 'bitti').sort((a,b) => {
             const ta = a.bitisTarihi && a.bitisTarihi !== 'Devam ediyor' ? a.bitisTarihi : '0';
@@ -700,15 +701,13 @@
             return tb > ta ? 1 : -1;
         });
         const toplamAlacak = bitenIsler.reduce((s,r) => s + isAlacagiHesapla(r).toplam, 0);
-        const bitenAlacak = bitenIsler.reduce((s,r) => s + isAlacagiHesapla(r).isBedeli, 0);
         const bakiye = toplamOdeme - toplamAlacak;
-        // bakiye > 0: fazla para geldi (borç), bakiye < 0: alacağımız var
-        const bakiyeRenk = bakiye < 0 ? 'bakiye-limon' : 'bakiye-borclu';
         const bakiyeText = bakiye < 0
             ? `⚠️ ${Math.abs(bakiye).toLocaleString('tr-TR')} ₺ Alacağımız Var`
             : `🔴 ${bakiye.toLocaleString('tr-TR')} ₺ Borç (Fazla Ödendi)`;
-
-        let muhasebeTab = window._muhasebeTab || 'isler';
+        const bakiyeStil = bakiye < 0
+            ? 'background:linear-gradient(135deg,#fef08a,#eab308);color:#1e293b;'
+            : 'background:linear-gradient(135deg,#ef4444,#dc2626);color:white;';
 
         let html = `<div class="header"><h1>💰 Muhasebe</h1><p>YARAR ASANSÖR MALİ TAKİP</p></div>
 
@@ -725,78 +724,77 @@
                 <div class="m-baslik">💵 ALINAN ÖDEME</div>
                 <div class="m-tutar">${toplamOdeme.toLocaleString('tr-TR')} ₺</div>
             </div>
-            <div class="m-ozet-kart" style="${bakiye < 0 ? 'background:linear-gradient(135deg,#fef08a,#eab308);color:#1e293b;' : 'background:linear-gradient(135deg,#ef4444,#dc2626);color:white;'} border-radius:16px; padding:14px;">
+            <div class="m-ozet-kart" style="${bakiyeStil} border-radius:16px; padding:14px;">
                 <div class="m-baslik" style="font-size:11px;font-weight:600;opacity:0.85;margin-bottom:6px;">⚖️ BAKİYE</div>
-                <div style="font-size:15px;font-weight:900;">${bakiyeText}</div>
+                <div style="font-size:14px;font-weight:900;">${bakiyeText}</div>
             </div>
-        </div>
-
-        <div class="m-ekle-form" style="${muhasebeTab==='odemeler'?'':'display:none;'}">
-            <div class="m-ekle-baslik">💵 Gelen Para Ekle</div>
-            <div style="display:flex;gap:8px;margin-bottom:8px;">
-                <input type="number" id="odemetutar" placeholder="Tutar (₺)" style="flex:1;margin-bottom:0;font-size:13px;">
-                <input type="date" id="odemetarih" value="${formatDate()}" style="flex:1;margin-bottom:0;font-size:13px;">
-            </div>
-            <input type="text" id="odemenot" placeholder="Not (isteğe bağlı)" style="margin-bottom:8px;font-size:13px;">
-            <button class="green-btn" onclick="odemeEkleYeni()" style="margin-top:0;padding:12px;font-size:14px;">💵 EKLE</button>
         </div>
 
         <div style="display:flex;gap:8px;margin-bottom:12px;">
             <button onclick="window._muhasebeTab='isler'; renderMuhasebe();" style="flex:1;padding:12px;border-radius:14px;font-size:14px;font-weight:700;margin-top:0;${muhasebeTab==='isler'?'background:linear-gradient(135deg,#f59e0b,#f97316);color:white;box-shadow:0 4px 12px rgba(245,158,11,0.3);':'background:#f1f5f9;color:#64748b;box-shadow:none;'}">✅ Biten İşler</button>
             <button onclick="window._muhasebeTab='odemeler'; renderMuhasebe();" style="flex:1;padding:12px;border-radius:14px;font-size:14px;font-weight:700;margin-top:0;${muhasebeTab==='odemeler'?'background:linear-gradient(135deg,#22c55e,#16a34a);color:white;box-shadow:0 4px 12px rgba(34,197,94,0.3);':'background:#f1f5f9;color:#64748b;box-shadow:none;'}">💵 Gelen Paralar</button>
-        </div>
+        </div>`;
 
-        <div class="m-tablo">
-            <div class="m-tablo-baslik">
-                <span>✅ Bitirilen İşler</span>
-                <span style="font-size:12px;color:#64748b;">${bitenIsler.length} kayıt</span>
-            </div>`;
-
-        if (bitenIsler.length === 0) {
-            html += `<div style="padding:20px;text-align:center;color:#64748b;font-size:13px;">Henüz biten iş yok</div>`;
-        } else {
-            bitenIsler.forEach(r => {
-                const h = isAlacagiHesapla(r);
-                const bt = r.bitisTarihi && r.bitisTarihi !== 'Devam ediyor' ? formatDateTR(r.bitisTarihi) : '-';
-                html += `<div class="m-satir" onclick="goToDetail('${r.id}')" style="cursor:pointer;">
-                    <div class="m-satir-sol">
-                        <div class="m-ad">${escapeHtml(r.musteri)}</div>
-                        <div class="m-alt">${escapeHtml(r.binaAdi)} · ${r.tip} · ${h.katSayisi} Kat${h.masraf>0?' + masraf':''}${h.iskele>0?' + iskele':''}</div>
-                    </div>
-                    <div class="m-satir-sag">
-                        <div class="m-fiyat">${h.toplam.toLocaleString('tr-TR')} ₺</div>
-                        <div class="m-tarih">${bt}</div>
-                    </div>
+        if (muhasebeTab === 'odemeler') {
+            html += `<div class="m-ekle-form">
+                <div class="m-ekle-baslik">💵 Gelen Para Ekle</div>
+                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                    <input type="number" id="odemetutar" placeholder="Tutar (₺)" style="flex:1;margin-bottom:0;font-size:13px;">
+                    <input type="date" id="odemetarih" value="${formatDate()}" style="flex:1;margin-bottom:0;font-size:13px;">
+                </div>
+                <input type="text" id="odemenot" placeholder="Not (isteğe bağlı)" style="margin-bottom:8px;font-size:13px;">
+                <button class="green-btn" onclick="odemeEkleYeni()" style="margin-top:0;padding:12px;font-size:14px;">💵 EKLE</button>
+            </div>
+            <div class="m-tablo">
+                <div class="m-tablo-baslik">
+                    <span>💵 Gelen Paralar</span>
+                    <span style="font-size:12px;color:#64748b;">${odemeler.length} kayıt</span>
                 </div>`;
-            });
-        }
-        html += `</div>
-
-        <div class="m-tablo">
-            <div class="m-tablo-baslik">
-                <span>💵 Gelen Paralar</span>
-                <span style="font-size:12px;color:#64748b;">${odemeler.length} kayıt</span>
-            </div>`;
-
-        if (odemeler.length === 0) {
-            html += `<div style="padding:20px;text-align:center;color:#64748b;font-size:13px;">Henüz ödeme girilmemiş</div>`;
+            if (odemeler.length === 0) {
+                html += `<div style="padding:20px;text-align:center;color:#64748b;font-size:13px;">Henüz ödeme girilmemiş</div>`;
+            } else {
+                odemeler.forEach(o => {
+                    html += `<div class="m-satir">
+                        <div class="m-satir-sol">
+                            <div class="m-ad m-odeme-fiyat">${parseFloat(o.tutar).toLocaleString('tr-TR')} ₺</div>
+                            <div class="m-alt">${o.not || 'Yarar Asansör Ödemesi'}</div>
+                        </div>
+                        <div class="m-satir-sag" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                            <div class="m-tarih" style="font-size:12px;">${formatDateTR(o.tarih)}</div>
+                            <button class="m-sil-btn" onclick="odemeSil('${o.id}')">Sil</button>
+                        </div>
+                    </div>`;
+                });
+            }
+            html += `</div>`;
         } else {
-            odemeler.forEach(o => {
-                html += `<div class="m-satir">
-                    <div class="m-satir-sol">
-                        <div class="m-ad m-odeme-fiyat">${parseFloat(o.tutar).toLocaleString('tr-TR')} ₺</div>
-                        <div class="m-alt">${o.not || 'Yarar Asansör Ödemesi'}</div>
-                    </div>
-                    <div class="m-satir-sag" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                        <div class="m-tarih" style="font-size:12px;">${formatDateTR(o.tarih)}</div>
-                        <button class="m-sil-btn" onclick="odemeSil('${o.id}')">Sil</button>
-                    </div>
+            html += `<div class="m-tablo">
+                <div class="m-tablo-baslik">
+                    <span>✅ Bitirilen İşler</span>
+                    <span style="font-size:12px;color:#64748b;">${bitenIsler.length} kayıt</span>
                 </div>`;
-            });
+            if (bitenIsler.length === 0) {
+                html += `<div style="padding:20px;text-align:center;color:#64748b;font-size:13px;">Henüz biten iş yok</div>`;
+            } else {
+                bitenIsler.forEach(r => {
+                    const h = isAlacagiHesapla(r);
+                    const bt = r.bitisTarihi && r.bitisTarihi !== 'Devam ediyor' ? formatDateTR(r.bitisTarihi) : '-';
+                    html += `<div class="m-satir" onclick="goToDetail('${r.id}')" style="cursor:pointer;">
+                        <div class="m-satir-sol">
+                            <div class="m-ad">${escapeHtml(r.musteri)}</div>
+                            <div class="m-alt">${escapeHtml(r.binaAdi)} · ${r.tip} · ${h.katSayisi} Kat${h.masraf>0?' + masraf':''}${h.iskele>0?' + iskele':''}</div>
+                        </div>
+                        <div class="m-satir-sag">
+                            <div class="m-fiyat">${h.toplam.toLocaleString('tr-TR')} ₺</div>
+                            <div class="m-tarih">${bt}</div>
+                        </div>
+                    </div>`;
+                });
+            }
+            html += `</div>`;
         }
-        html += `</div>
 
-        <div class="bottom-nav">
+        html += `<div class="bottom-nav">
             <div class="nav-item" onclick="changePage('list')">📋 LİSTE</div>
             <div class="nav-item" onclick="newRecord()">➕ YENİ</div>
             <div class="nav-item active" onclick="changePage('muhasebe')">💰 MUHASEBE</div>
