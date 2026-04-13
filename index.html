@@ -192,8 +192,8 @@
     function getStats() {
         return {
             total: records.length,
-            active: records.filter(r => r.durum==='basladi'||r.durum==='devam').length,
-            paused: records.filter(r => r.durum==='ara verildi').length,
+            active: records.filter(r => r.durum==='devam').length,
+            paused: records.filter(r => r.durum==='ara verildi' || r.durum==='basladi').length,
             completed: records.filter(r => r.durum==='bitti').length
         };
     }
@@ -206,7 +206,17 @@
                 return (rec.musteri&&rec.musteri.toLowerCase().includes(txt))||(rec.binaAdi&&rec.binaAdi.toLowerCase().includes(txt))||(rec.adres&&rec.adres.toLowerCase().includes(txt))||(rec.marka&&rec.marka.toLowerCase().includes(txt));
             }
             return true;
-        }).sort((a,b) => (durumSira[a.durum]??9)-(durumSira[b.durum]??9));
+        }).sort((a,b) => {
+            const ds = (durumSira[a.durum]??9) - (durumSira[b.durum]??9);
+            if (ds !== 0) return ds;
+            // Biten işler kendi içinde eski tarih üstte yeni tarih altta
+            if (a.durum === 'bitti' && b.durum === 'bitti') {
+                const ta = a.bitisTarihi && a.bitisTarihi !== 'Devam ediyor' ? a.bitisTarihi : '0';
+                const tb = b.bitisTarihi && b.bitisTarihi !== 'Devam ediyor' ? b.bitisTarihi : '0';
+                return ta > tb ? 1 : -1;
+            }
+            return 0;
+        });
     }
 
     function renderList() {
@@ -214,10 +224,10 @@
         const stats = getStats();
         let html = `<div class="header"><h1>⚙️🛗 Montaj Takip</h1><p>ASANSÖR YÖNETİM SİSTEMİ</p></div>
         <div class="stats-grid">
-            <div class="stat-card"><div class="stat-number">${stats.total}</div><div class="stat-label">TOPLAM</div></div>
-            <div class="stat-card"><div class="stat-number">${stats.active}</div><div class="stat-label">AKTİF</div></div>
-            <div class="stat-card"><div class="stat-number">${stats.paused}</div><div class="stat-label">ARA VERİLDİ</div></div>
-            <div class="stat-card"><div class="stat-number">${stats.completed}</div><div class="stat-label">BİTEN</div></div>
+            <div class="stat-card" style="background:linear-gradient(135deg,#3b82f6,#2563eb);border-color:#2563eb;"><div class="stat-number" style="color:white;">${stats.total}</div><div class="stat-label" style="color:rgba(255,255,255,0.8);">TOPLAM</div></div>
+            <div class="stat-card" style="background:linear-gradient(135deg,#22c55e,#16a34a);border-color:#16a34a;"><div class="stat-number" style="color:white;">${stats.active}</div><div class="stat-label" style="color:rgba(255,255,255,0.8);">AKTİF</div></div>
+            <div class="stat-card" style="background:linear-gradient(135deg,#f97316,#ea580c);border-color:#ea580c;"><div class="stat-number" style="color:white;">${stats.paused}</div><div class="stat-label" style="color:rgba(255,255,255,0.8);">ARA/BAŞLADI</div></div>
+            <div class="stat-card" style="background:linear-gradient(135deg,#ef4444,#dc2626);border-color:#dc2626;"><div class="stat-number" style="color:white;">${stats.completed}</div><div class="stat-label" style="color:rgba(255,255,255,0.8);">BİTEN</div></div>
         </div>
         <div class="search-box"><span>🔍</span><input type="text" id="globalSearch" placeholder="Bina, adres, müşteri, marka ara..." value="${searchText.replace(/"/g,'&quot;')}"></div>
         <div class="filter-buttons">
@@ -281,7 +291,7 @@
         <div class="section"><div class="section-title">📅 İŞ BİTİŞ TARİHİ</div>
         <div class="date-row">
             <input type="date" id="bitisTarihiDate" value="${bitisDate}" style="flex:2;">
-            <button type="button" class="devam-btn" id="devamBtn" style="flex:1;">Devam ediyor</button>
+            <button type="button" class="devam-btn" id="devamBtn" style="flex:1;">${record.durum==='bitti'?'Teslim Edildi':'Devam ediyor'}</button>
         </div>
         <input type="hidden" id="bitisTarihi" value="${record.bitisTarihi||''}">
         </div>
@@ -349,7 +359,7 @@
                     <div class="measure-item"><div class="measure-label">İki Merkez Ölçüsü (cm)</div><input type="number" id="ikiMerkezOlcu" placeholder="cm" value="${record.ikiMerkezOlcu||''}"></div>
                 </div>
                 <div class="row">
-                    <div class="measure-item"><div class="measure-label">Toplam Ray Boyu (cm)</div><input type="number" id="rayKapiToplam" placeholder="cm" value="${record.rayKapiToplam||''}"></div>
+                    <div class="measure-item"><div class="measure-label">Toplam Ray Boyu (MT)</div><input type="number" id="rayKapiToplam" placeholder="MT" value="${record.rayKapiToplam||''}"></div>
                 </div>
                 <div class="row">
                     <div class="measure-item"><div class="measure-label">Kapı Modeli</div>
@@ -731,8 +741,8 @@
         </div>
 
         <div style="display:flex;gap:8px;margin-bottom:12px;">
-            <button onclick="window._muhasebeTab='isler'; renderMuhasebe();" style="flex:1;padding:12px;border-radius:14px;font-size:14px;font-weight:700;margin-top:0;${muhasebeTab==='isler'?'background:linear-gradient(135deg,#f59e0b,#f97316);color:white;box-shadow:0 4px 12px rgba(245,158,11,0.3);':'background:#f1f5f9;color:#64748b;box-shadow:none;'}">✅ Biten İşler</button>
             <button onclick="window._muhasebeTab='odemeler'; renderMuhasebe();" style="flex:1;padding:12px;border-radius:14px;font-size:14px;font-weight:700;margin-top:0;${muhasebeTab==='odemeler'?'background:linear-gradient(135deg,#22c55e,#16a34a);color:white;box-shadow:0 4px 12px rgba(34,197,94,0.3);':'background:#f1f5f9;color:#64748b;box-shadow:none;'}">💵 Gelen Paralar</button>
+            <button onclick="window._muhasebeTab='isler'; renderMuhasebe();" style="flex:1;padding:12px;border-radius:14px;font-size:14px;font-weight:700;margin-top:0;${muhasebeTab==='isler'?'background:linear-gradient(135deg,#f59e0b,#f97316);color:white;box-shadow:0 4px 12px rgba(245,158,11,0.3);':'background:#f1f5f9;color:#64748b;box-shadow:none;'}">✅ Biten İşler</button>
         </div>`;
 
         if (muhasebeTab === 'odemeler') {
