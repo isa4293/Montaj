@@ -62,6 +62,15 @@
         .masraf-toplam { background: linear-gradient(135deg, #fff7ed, #fef3c7); border-radius: 14px; padding: 12px; margin-top: 8px; text-align: center; font-size: 16px; color: #f59e0b; font-weight: 700; border: 1px solid #fed7aa; }
         .bakiye-limon { background: linear-gradient(135deg,#fef08a,#eab308); color:#1e293b; border-radius:14px; padding:14px; text-align:center; font-weight:800; font-size:17px; margin-bottom:12px; }
         .bakiye-borclu { background: linear-gradient(135deg,#fee2e2,#fca5a5); color:#dc2626; border-radius:14px; padding:14px; text-align:center; font-weight:800; font-size:17px; margin-bottom:12px; }
+        /* FOTOĞRAF */
+        .foto-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 10px; }
+        .foto-item { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #f1f5f9; border: 1px solid #e2e8f0; }
+        .foto-item img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
+        .foto-sil { position: absolute; top: 4px; right: 4px; background: rgba(239,68,68,0.9); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; width: 24px; box-shadow: none; }
+        .foto-ekle-btn { aspect-ratio: 1; border-radius: 12px; border: 2px dashed #e2e8f0; background: #f8fafc; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: #64748b; font-size: 12px; gap: 4px; }
+        .foto-buyuk { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 99999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .foto-buyuk img { max-width: 95vw; max-height: 85vh; border-radius: 12px; object-fit: contain; }
+        .foto-buyuk-kapat { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; margin: 0; width: 40px; padding: 0; box-shadow: none; }
         #syncBar { position: fixed; top: 0; left: 0; right: 0; text-align: center; font-size: 13px; font-weight: 600; padding: 6px; z-index: 10000; display: none; }
         .sync-ok { background: #22c55e; color: white; }
         .sync-loading { background: #f59e0b; color: white; }
@@ -284,7 +293,7 @@
             kapiYonu:'Sağ',teleskopikKayma:'',kaymaYonu:'Sağa',durakSayisi:1,
             motorM:'',motorS:'',panoM:'',panoS:'',kabinM:'',kabinS:'',
             regulatorM:'',regulatorS:'',frenM:'',frenS:'',kabinTamponM:'',kabinTamponS:'',agirlikTamponM:'',agirlikTamponS:'',
-            kapilar:[],masrafYol:'',masrafYemek:'',masrafExtraAdi:'',masrafExtra:'',iskeleSokKat:0,iskeleSokFiyat:500,iskeleSokToplam:0,iskeleKurKat:0,iskeleKurFiyat:500,iskeleKurToplam:0,katBasiFiyat:12250,
+            kapilar:[],fotolar:[],masrafYol:'',masrafYemek:'',masrafExtraAdi:'',masrafExtra:'',iskeleSokKat:0,iskeleSokFiyat:500,iskeleSokToplam:0,iskeleKurKat:0,iskeleKurFiyat:500,iskeleKurToplam:0,katBasiFiyat:12250,
             kacKisilik:'',kapiTipi:'',rayMarkasi:'',rayMatka:'',kapiDetay:''
         };
         editId = record.id;
@@ -449,7 +458,23 @@
             </div>
             <div class="masraf-toplam" id="masrafToplam">Toplam: ${((parseFloat(record.masrafYol||0))+(parseFloat(record.masrafYemek||0))+(parseFloat(record.masrafExtra||0))).toFixed(2)} ₺</div>
         </div>
-        <button onclick="saveRecord()">💾 KAYDET</button>`;
+        <div class="section"><div class="section-title">📷 FOTOĞRAFLAR</div>
+            <div class="foto-grid" id="formFotoGrid">
+                ${(record.fotolar||[]).map((f,i) => `
+                    <div class="foto-item">
+                        <img src="${f}" onclick="fotoBuyut('${f}')">
+                        <button class="foto-sil" onclick="formFotoSil(${i})">✕</button>
+                    </div>
+                `).join('')}
+                <div class="foto-ekle-btn" onclick="document.getElementById('fotoInput').click()">
+                    <span style="font-size:24px;">📷</span>
+                    <span>Fotoğraf Ekle</span>
+                </div>
+            </div>
+            <input type="file" id="fotoInput" accept="image/*" multiple style="display:none;" onchange="fotoEkle(this)">
+        </div>
+
+        <button onclick="saveRecord()">💾 KAYDET</button>\`;
 
         updateKapilar(record.durakSayisi||1, record.kapilar);
         tipDegisti();
@@ -568,6 +593,7 @@
             kacKisilik:document.getElementById('kacKisilik')?.value||'',
             kapiTipi:document.getElementById('kapiTipi')?.value||'',
             notlar:document.getElementById('notlar').value,
+            fotolar: window._formFotolar || (editId ? records.find(r=>r.id===editId)?.fotolar||[] : []),
             durakSayisi:document.getElementById('durakSayisi')?.value||1,
             kapilar,
             masrafYol:document.getElementById('masrafYol')?.value||'',
@@ -687,8 +713,15 @@
             <div style="margin-bottom:8px;">➕ ${escapeHtml(rec.masrafExtraAdi)||'Extra'}: <b>${rec.masrafExtra?rec.masrafExtra+' ₺':'-'}</b></div>
             <div class="masraf-toplam">Toplam: ${toplamMasraf} ₺</div>
         </div>
-        <button onclick="editRecord('${rec.id}')">✏️ DÜZENLE</button>
-        <button onclick="deleteRecord('${rec.id}')" style="background:#dc2626;">🗑️ SİL</button>`;
+        `);
+        if (rec.fotolar && rec.fotolar.length > 0) {
+            var fg = '<div class="section"><div class="section-title">📷 FOTOĞRAFLAR (' + rec.fotolar.length + ')</div><div class="foto-grid">';
+            rec.fotolar.forEach(function(f){ fg += '<div class="foto-item"><img src="' + f + '" onclick="fotoBuyut(this.src)"></div>'; });
+            fg += '</div></div>';
+            html += fg;
+        }
+        html += '<button onclick="editRecord(\'' + rec.id + '\')">✏️ DÜZENLE</button>';
+        html += '<button onclick="deleteRecord(\'' + rec.id + '\')" style="background:#dc2626;">🗑️ SİL</button>';
         document.getElementById('app').innerHTML=html;
     }
 
@@ -704,6 +737,67 @@
         else if(page==='detail'&&id) renderDetail(id);
         else if(page==='muhasebe') renderMuhasebe();
     }
+    function fotoEkle(input) {
+        const files = Array.from(input.files);
+        if (!files.length) return;
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                // Fotoğrafı sıkıştır
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const maxW = 800;
+                    const ratio = Math.min(maxW / img.width, maxW / img.height, 1);
+                    canvas.width = img.width * ratio;
+                    canvas.height = img.height * ratio;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const compressed = canvas.toDataURL('image/jpeg', 0.7);
+                    window._formFotolar = window._formFotolar || [];
+                    window._formFotolar.push(compressed);
+                    formFotoGridGuncelle();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+        input.value = '';
+    }
+
+    function formFotoGridGuncelle() {
+        const grid = document.getElementById('formFotoGrid');
+        if (!grid) return;
+        const fotolar = window._formFotolar || [];
+        grid.innerHTML = fotolar.map((f,i) => `
+            <div class="foto-item">
+                <img src="${f}" onclick="fotoBuyut('${f}')">
+                <button class="foto-sil" onclick="formFotoSil(${i})">✕</button>
+            </div>
+        `).join('') + `
+            <div class="foto-ekle-btn" onclick="document.getElementById('fotoInput').click()">
+                <span style="font-size:24px;">📷</span>
+                <span>Fotoğraf Ekle</span>
+            </div>`;
+    }
+
+    function formFotoSil(idx) {
+        if (!confirm('Bu fotoğrafı silmek istediğinize emin misiniz?')) return;
+        window._formFotolar.splice(idx, 1);
+        formFotoGridGuncelle();
+    }
+
+    function fotoBuyut(src) {
+        const div = document.createElement('div');
+        div.className = 'foto-buyuk';
+        div.innerHTML = `
+            <button class="foto-buyuk-kapat" onclick="this.parentElement.remove()">✕</button>
+            <img src="${src}">
+        `;
+        document.body.appendChild(div);
+        div.addEventListener('click', (e) => { if(e.target === div) div.remove(); });
+    }
+
     function escapeHtml(str){if(!str)return '';return str.replace(/[&<>]/g,m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;');}
 
     // Fiyat tablosu
