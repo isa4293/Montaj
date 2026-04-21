@@ -9,9 +9,8 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background: #f1f5f9; color: #1e293b; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; padding: 16px 16px 80px 16px; }
-        .header { text-align: center; margin-bottom: 24px; }
-        .header h1 { font-size: 28px; background: linear-gradient(135deg, #f59e0b, #f97316); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .header p { font-size: 12px; color: #64748b; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header p { font-size: 11px; color: #94a3b8; }
         .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
         .stat-card { background: #ffffff; border-radius: 20px; padding: 12px 8px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .stat-number { font-size: 28px; font-weight: 800; color: #f59e0b; }
@@ -241,27 +240,41 @@
         const filtered = getFilteredRecords();
         const stats = getStats();
         const c = currentFilter;
-        let html = `<div class="header"><h1>⚙️🛗 Montaj Takip</h1><p>ASANSÖR YÖNETİM SİSTEMİ</p></div>
+        let html = `<div class="header"><div style="display:inline-flex;align-items:center;gap:12px;padding:0 4px;margin-bottom:6px;">
+  <div style="position:relative;width:52px;height:52px;flex-shrink:0;">
+    <div style="width:52px;height:52px;background:linear-gradient(135deg,#f59e0b,#f97316);border-radius:16px;box-shadow:0 6px 20px rgba(245,158,11,0.45);display:flex;align-items:center;justify-content:center;">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="3" fill="white"/>
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="12" cy="12" r="6" stroke="white" stroke-width="1.5" stroke-dasharray="2 2"/>
+      </svg>
+    </div>
+  </div>
+  <div style="text-align:left;">
+    <div style="font-size:22px;font-weight:900;background:linear-gradient(135deg,#1e293b,#475569);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1;letter-spacing:-0.5px;">Montaj Takip</div>
+    <div style="font-size:10px;color:#94a3b8;font-weight:600;letter-spacing:2px;margin-top:3px;text-transform:uppercase;">Asansör Yönetim</div>
+  </div>
+</div></div>
         <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px;">
-            <div onclick="setFilter('all')" style="cursor:pointer;border-radius:14px;padding:10px 3px;text-align:center;background:linear-gradient(135deg,#3b82f6,#1d4ed8);box-shadow:0 3px 8px rgba(59,130,246,0.4);border:2px solid ${c==='all'?'#fff':'transparent'};transition:all 0.15s;">
-                <div style="font-size:22px;font-weight:900;color:white;line-height:1;">${stats.total}</div>
-                <div style="font-size:9px;color:rgba(255,255,255,0.9);font-weight:700;margin-top:3px;letter-spacing:0.3px;">TOPLAM</div>
+            <div onclick="setFilter('all')" style="cursor:pointer;border-radius:14px;padding:10px 3px;text-align:center;background:linear-gradient(145deg,#faff00,#e8e000);box-shadow:0 4px 12px rgba(234,224,0,0.55);border:2px solid ${c==='all'?'rgba(255,255,255,0.9)':'transparent'};transform:${c==='all'?'scale(1.05)':'scale(1)'};transition:all 0.15s;">
+                <div style="font-size:22px;font-weight:900;color:#1e293b;line-height:1;">${stats.total}</div>
+                <div style="font-size:8px;color:rgba(30,41,59,0.8);font-weight:800;margin-top:3px;letter-spacing:0.5px;">TOPLAM</div>
             </div>
-            <div onclick="setFilter('devam')" style="cursor:pointer;border-radius:14px;padding:10px 3px;text-align:center;background:linear-gradient(135deg,#22c55e,#15803d);box-shadow:0 3px 8px rgba(34,197,94,0.4);border:2px solid ${c==='devam'?'#fff':'transparent'};transition:all 0.15s;">
+            <div onclick="setFilter('devam')" style="cursor:pointer;border-radius:14px;padding:10px 3px;text-align:center;background:linear-gradient(145deg,#10b981,#059669);box-shadow:0 4px 10px rgba(16,185,129,0.45);border:2px solid ${c==='devam'?'rgba(255,255,255,0.9)':'transparent'};transform:${c==='devam'?'scale(1.05)':'scale(1)'};transition:all 0.15s;">
                 <div style="font-size:22px;font-weight:900;color:white;line-height:1;">${stats.devam}</div>
-                <div style="font-size:9px;color:rgba(255,255,255,0.9);font-weight:700;margin-top:3px;letter-spacing:0.3px;">DEVAM</div>
+                <div style="font-size:8px;color:rgba(255,255,255,0.85);font-weight:700;margin-top:3px;letter-spacing:0.5px;">DEVAM</div>
             </div>
-            <div onclick="setFilter('basladi')" style="cursor:pointer;border-radius:14px;padding:10px 3px;text-align:center;background:linear-gradient(135deg,#818cf8,#4f46e5);box-shadow:0 3px 8px rgba(99,102,241,0.4);border:2px solid ${c==='basladi'?'#fff':'transparent'};transition:all 0.15s;">
+            <div onclick="setFilter('basladi')" style="cursor:pointer;border-radius:14px;padding:10px 3px;text-align:center;background:linear-gradient(145deg,#3b82f6,#1d4ed8);box-shadow:0 4px 10px rgba(59,130,246,0.45);border:2px solid ${c==='basladi'?'rgba(255,255,255,0.9)':'transparent'};transform:${c==='basladi'?'scale(1.05)':'scale(1)'};transition:all 0.15s;">
                 <div style="font-size:22px;font-weight:900;color:white;line-height:1;">${stats.basladi}</div>
-                <div style="font-size:9px;color:rgba(255,255,255,0.9);font-weight:700;margin-top:3px;letter-spacing:0.3px;">BAŞLADI</div>
+                <div style="font-size:8px;color:rgba(255,255,255,0.85);font-weight:700;margin-top:3px;letter-spacing:0.5px;">BAŞLADI</div>
             </div>
-            <div onclick="setFilter('ara verildi')" style="cursor:pointer;border-radius:14px;padding:10px 3px;text-align:center;background:linear-gradient(135deg,#fb923c,#c2410c);box-shadow:0 3px 8px rgba(249,115,22,0.4);border:2px solid ${c==='ara verildi'?'#fff':'transparent'};transition:all 0.15s;">
+            <div onclick="setFilter('ara verildi')" style="cursor:pointer;border-radius:14px;padding:10px 3px;text-align:center;background:linear-gradient(145deg,#f59e0b,#d97706);box-shadow:0 4px 10px rgba(245,158,11,0.45);border:2px solid ${c==='ara verildi'?'rgba(255,255,255,0.9)':'transparent'};transform:${c==='ara verildi'?'scale(1.05)':'scale(1)'};transition:all 0.15s;">
                 <div style="font-size:22px;font-weight:900;color:white;line-height:1;">${stats.araVerildi}</div>
-                <div style="font-size:9px;color:rgba(255,255,255,0.9);font-weight:700;margin-top:3px;letter-spacing:0.3px;">ARA VERİLDİ</div>
+                <div style="font-size:8px;color:rgba(255,255,255,0.85);font-weight:700;margin-top:3px;letter-spacing:0.5px;">ARA VERİLDİ</div>
             </div>
-            <div onclick="setFilter('bitti')" style="cursor:pointer;border-radius:14px;padding:10px 3px;text-align:center;background:linear-gradient(135deg,#f87171,#b91c1c);box-shadow:0 3px 8px rgba(239,68,68,0.4);border:2px solid ${c==='bitti'?'#fff':'transparent'};transition:all 0.15s;">
+            <div onclick="setFilter('bitti')" style="cursor:pointer;border-radius:14px;padding:10px 3px;text-align:center;background:linear-gradient(145deg,#ef4444,#dc2626);box-shadow:0 4px 10px rgba(239,68,68,0.45);border:2px solid ${c==='bitti'?'rgba(255,255,255,0.9)':'transparent'};transform:${c==='bitti'?'scale(1.05)':'scale(1)'};transition:all 0.15s;">
                 <div style="font-size:22px;font-weight:900;color:white;line-height:1;">${stats.bitti}</div>
-                <div style="font-size:9px;color:rgba(255,255,255,0.9);font-weight:700;margin-top:3px;letter-spacing:0.3px;">BİTEN</div>
+                <div style="font-size:8px;color:rgba(255,255,255,0.85);font-weight:700;margin-top:3px;letter-spacing:0.5px;">BİTEN</div>
             </div>
         </div>
         <div class="search-box"><span style="color:#94a3b8;">🔍</span><input type="text" id="searchInput" placeholder="Müşteri, adres, bina ara..." value="${searchText.replace(/"/g,'&quot;')}" style="font-size:13px;"></div>
@@ -527,9 +540,13 @@
         ['normalAsansorAlani','seriNoBolumu','normalOlculer'].forEach(id => { const el=document.getElementById(id); if(el) el.style.display=isRay?'none':'block'; });
         const rk=document.getElementById('rayKapiOlculer'); if(rk) rk.style.display=isRay?'block':'none';
         const kb=document.getElementById('kapilarBolumu'); if(kb) kb.style.display=isRay?'none':'block';
-        // Kat başı fiyatı tipe göre güncelle (kullanıcı değiştirmediyse)
+        // Fiyatı sadece boşsa veya FIYATLAR tablosundaki değerdeyse güncelle
         const fiyatEl = document.getElementById('katBasiFiyat');
-        if(fiyatEl) fiyatEl.value = FIYATLAR[tip] || 12250;
+        const mevcutFiyat = parseFloat(fiyatEl?.value);
+        const varsayilanlar = Object.values(FIYATLAR);
+        if(fiyatEl && (!mevcutFiyat || varsayilanlar.includes(mevcutFiyat))) {
+            fiyatEl.value = FIYATLAR[tip] || 12250;
+        }
     };
 
     window.updateKapilar = function(n, existing=null) {
@@ -597,7 +614,8 @@
             iskeleSokToplam:parseFloat(document.getElementById('iskeleSokToplam')?.value||0),
             iskeleKurKat:parseFloat(document.getElementById('iskeleKurKat')?.value||0),
             iskeleKurFiyat:parseFloat(document.getElementById('iskeleKurFiyat')?.value||500),
-            iskeleKurToplam:parseFloat(document.getElementById('iskeleKurToplam')?.value||0)
+            iskeleKurToplam:parseFloat(document.getElementById('iskeleKurToplam')?.value||0),
+            katBasiFiyat:parseFloat(document.getElementById('katBasiFiyat')?.value)||FIYATLAR[tip]||12250
         };
         if(tip==='Ray Kapı'){
             rec.anaRayGenislik=document.getElementById('anaRayGenislik').value;
@@ -755,7 +773,9 @@
 
     function isAlacagiHesapla(rec) {
         const katSayisi = parseInt(rec.durakSayisi) || 0;
-        const fiyat = parseFloat(rec.katBasiFiyat) || FIYATLAR[rec.tip] || 0;
+        const fiyat = (rec.katBasiFiyat && parseFloat(rec.katBasiFiyat) > 0)
+            ? parseFloat(rec.katBasiFiyat)
+            : (FIYATLAR[rec.tip] || 0);
         const isBedeli = katSayisi * fiyat;
         const masraf = (parseFloat(rec.masrafYol)||0) + (parseFloat(rec.masrafYemek)||0) + (parseFloat(rec.masrafExtra)||0);
         const iskele = (parseFloat(rec.iskeleSokToplam)||0) + (parseFloat(rec.iskeleKurToplam)||0);
