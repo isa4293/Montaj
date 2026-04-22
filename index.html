@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>Montaj Takip - İsa Keleş</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -15,7 +16,7 @@
         .stat-card { background: #ffffff; border-radius: 20px; padding: 12px 8px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .stat-number { font-size: 28px; font-weight: 800; color: #f59e0b; }
         .stat-label { font-size: 11px; color: #64748b; margin-top: 6px; }
-        .search-box { background: #ffffff; border-radius: 30px; padding: 12px 18px; border: 1px solid #e2e8f0; margin-bottom: 16px; display: flex; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .search-box { background: #ffffff; border-radius: 30px; padding: 8px 18px; border: 1px solid #e2e8f0; margin-bottom: 16px; display: flex; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .search-box input { background: transparent; border: none; color: #1e293b; font-size: 15px; flex: 1; outline: none; }
         .filter-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
         .filter-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 40px; padding: 8px 16px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
@@ -61,19 +62,20 @@
         .masraf-toplam { background: linear-gradient(135deg, #fff7ed, #fef3c7); border-radius: 14px; padding: 12px; margin-top: 8px; text-align: center; font-size: 16px; color: #f59e0b; font-weight: 700; border: 1px solid #fed7aa; }
         .bakiye-limon { background: linear-gradient(135deg,#fef08a,#eab308); color:#1e293b; border-radius:14px; padding:14px; text-align:center; font-weight:800; font-size:17px; margin-bottom:12px; }
         .bakiye-borclu { background: linear-gradient(135deg,#fee2e2,#fca5a5); color:#dc2626; border-radius:14px; padding:14px; text-align:center; font-weight:800; font-size:17px; margin-bottom:12px; }
+        .pdf-btn { background:linear-gradient(135deg,#25d366,#128c7e); color:white; border:none; padding:13px; border-radius:20px; font-weight:700; font-size:14px; width:100%; cursor:pointer; margin-bottom:8px; box-shadow:0 4px 14px rgba(37,211,102,0.4); }
         #syncBar { position: fixed; top: 0; left: 0; right: 0; text-align: center; font-size: 13px; font-weight: 600; padding: 6px; z-index: 10000; display: none; }
         .sync-ok { background: #22c55e; color: white; }
         .sync-loading { background: #f59e0b; color: white; }
         .sync-err { background: #ef4444; color: white; }
         /* MUHASEBE */
         .m-ozet-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
-        .m-ozet-kart { border-radius:16px; padding:14px; color:white; }
-        .m-ozet-kart .m-baslik { font-size:11px; font-weight:600; opacity:0.85; margin-bottom:6px; }
-        .m-ozet-kart .m-tutar { font-size:22px; font-weight:900; }
-        .m-yesil { background: linear-gradient(135deg,#22c55e,#16a34a); }
-        .m-turuncu { background: linear-gradient(135deg,#f59e0b,#f97316); }
-        .m-mavi { background: linear-gradient(135deg,#3b82f6,#2563eb); }
-        .m-kirmizi { background: linear-gradient(135deg,#ef4444,#dc2626); }
+        .m-ozet-kart { border-radius:18px; padding:16px; color:white; box-shadow:0 6px 20px rgba(0,0,0,0.12); }
+        .m-ozet-kart .m-baslik { font-size:10px; font-weight:700; opacity:0.9; margin-bottom:8px; letter-spacing:0.8px; text-transform:uppercase; }
+        .m-ozet-kart .m-tutar { font-size:21px; font-weight:900; line-height:1.1; }
+        .m-yesil { background: linear-gradient(135deg,#059669,#047857); box-shadow:0 6px 20px rgba(5,150,105,0.35); }
+        .m-turuncu { background: linear-gradient(135deg,#7c3aed,#6d28d9); box-shadow:0 6px 20px rgba(124,58,237,0.35); }
+        .m-mavi { background: linear-gradient(135deg,#0284c7,#0369a1); box-shadow:0 6px 20px rgba(2,132,199,0.35); }
+        .m-kirmizi { background: linear-gradient(135deg,#ef4444,#dc2626); box-shadow:0 6px 20px rgba(239,68,68,0.35); }
         .m-tablo { background:#ffffff; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.05); margin-bottom:16px; overflow:hidden; }
         .m-tablo-baslik { padding:14px 14px 8px; font-weight:800; font-size:14px; color:#1e293b; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; }
         .m-satir { padding:10px 14px; border-bottom:1px solid #f8fafc; display:flex; justify-content:space-between; align-items:center; }
@@ -286,7 +288,7 @@
             html += `<div class="project-card" onclick="goToDetail('${rec.id}')">
                 <div class="project-header"><span class="customer-name">${escapeHtml(rec.musteri)||'İsimsiz'}</span><span class="status-badge status-${dc}">${badge}</span></div>
                 <div class="project-location">📍 ${escapeHtml(rec.adres)||'-'}</div>
-                <div class="project-footer"><span>⚙️ ${escapeHtml(rec.tip)||'-'}</span><span>📅 ${rec.baslamaTarihi?formatDateTR(rec.baslamaTarihi):'-'}</span></div>
+                <div class="project-footer"><span>⚙️� ${escapeHtml(rec.tip)||'-'}</span><span>📅 ${rec.baslamaTarihi?formatDateTR(rec.baslamaTarihi):'-'}</span></div>
             </div>`;
         });
         html += `</div><div class="bottom-nav">
@@ -480,6 +482,7 @@
             </div>
             <div class="masraf-toplam" id="masrafToplam">Toplam: ${((parseFloat(record.masrafYol||0))+(parseFloat(record.masrafYemek||0))+(parseFloat(record.masrafExtra||0))).toFixed(2)} ₺</div>
         </div>
+        <div id="pdfGonderAlani" style="margin-bottom:4px;"></div>
         <button onclick="saveRecord()">💾 KAYDET</button>`;
 
         updateKapilar(record.durakSayisi||1, record.kapilar);
@@ -540,12 +543,19 @@
         ['normalAsansorAlani','seriNoBolumu','normalOlculer'].forEach(id => { const el=document.getElementById(id); if(el) el.style.display=isRay?'none':'block'; });
         const rk=document.getElementById('rayKapiOlculer'); if(rk) rk.style.display=isRay?'block':'none';
         const kb=document.getElementById('kapilarBolumu'); if(kb) kb.style.display=isRay?'none':'block';
-        // Fiyatı sadece boşsa veya FIYATLAR tablosundaki değerdeyse güncelle
         const fiyatEl = document.getElementById('katBasiFiyat');
         const mevcutFiyat = parseFloat(fiyatEl?.value);
         const varsayilanlar = Object.values(FIYATLAR);
         if(fiyatEl && (!mevcutFiyat || varsayilanlar.includes(mevcutFiyat))) {
             fiyatEl.value = FIYATLAR[tip] || 12250;
+        }
+        const alan = document.getElementById('pdfGonderAlani');
+        if(alan) {
+            if(isRay) {
+                alan.innerHTML = '<button class="pdf-btn" onclick="pdfOlusturVePaylas(&quot;ray&quot;)">📄 Ölçüleri PDF Yap & Paylaş</button>';
+            } else {
+                alan.innerHTML = '<button class="pdf-btn" onclick="pdfOlusturVePaylas(&quot;seri&quot;)">📄 Seri No & Kapıları PDF Yap & Paylaş</button>';
+            }
         }
     };
 
@@ -766,6 +776,169 @@
         pl.innerHTML = html;
     }
 
+    async function pdfOlusturVePaylas(tur) {
+        if(!window.jspdf) { alert('PDF kütüphanesi yükleniyor, lütfen bekleyin...'); return; }
+        const { jsPDF } = window.jspdf;
+        const musteri = document.getElementById('musteri')?.value?.trim() || 'Musteri';
+        const binaAdi = document.getElementById('binaAdi')?.value?.trim() || '';
+        const tip = document.getElementById('tip')?.value || '';
+        const tarih = new Date().toLocaleDateString('tr-TR');
+
+        const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+
+        // Yardımcı fonksiyon - Türkçe karakterleri düzelt
+        const tr = (s) => (s||'-').replace(/ğ/g,'g').replace(/Ğ/g,'G').replace(/ü/g,'u').replace(/Ü/g,'U').replace(/ş/g,'s').replace(/Ş/g,'S').replace(/ı/g,'i').replace(/İ/g,'I').replace(/ö/g,'o').replace(/Ö/g,'O').replace(/ç/g,'c').replace(/Ç/g,'C');
+
+        // Başlık bandı
+        doc.setFillColor(245, 158, 11);
+        doc.rect(0, 0, 210, 34, 'F');
+        doc.setTextColor(255,255,255);
+        doc.setFontSize(8);
+        doc.setFont('helvetica','normal');
+        doc.text('ISA KELES MONTAJ TAKIP', 105, 8, {align:'center'});
+        doc.setFontSize(18);
+        doc.setFont('helvetica','bold');
+        const baslik = tur==='ray' ? tr(musteri) + ' - Ray Kapi Olculeri' : tr(musteri) + ' - Seri Numaralari';
+        doc.text(baslik, 105, 18, {align:'center'});
+        doc.setFontSize(9);
+        doc.setFont('helvetica','normal');
+        if(binaAdi) doc.text(tr(binaAdi) + ' | ' + tarih, 105, 26, {align:'center'});
+        else doc.text(tarih, 105, 26, {align:'center'});
+
+        let y = 40;
+
+        // Satır çizme yardımcısı
+        const satir = (etiket, deger, idx) => {
+            if(y > 272) { doc.addPage(); y = 15; }
+            if(idx % 2 === 0) { doc.setFillColor(248,250,252); doc.rect(10, y-5, 190, 9, 'F'); }
+            doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(100,116,139);
+            doc.text(tr(etiket), 14, y);
+            doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(15,23,42);
+            doc.text(tr(deger), 100, y);
+            y += 10;
+        };
+
+        const bolumBaslik = (baslik) => {
+            if(y > 265) { doc.addPage(); y = 15; }
+            y += 2;
+            doc.setFillColor(30,41,59); doc.rect(10, y-5, 190, 10, 'F');
+            doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(245,158,11);
+            doc.text(tr(baslik), 14, y+1);
+            y += 10;
+        };
+
+        if(tur === 'ray') {
+            // RAY KAPI ÖLÇÜLERİ
+            bolumBaslik('RAY KAPI BILGILERI');
+            const v = (id) => document.getElementById(id)?.value || '-';
+            const olculer = [
+                ['Kat Sayisi', v('rayKatSayisi') + ' Kat'],
+                ['Kuyu Genislik', v('rayKuyuG') + ' cm'],
+                ['Kuyu Derinlik', v('rayKuyuD') + ' cm'],
+                ['Ray Markasi', v('rayMarkasi')],
+                ['Kapi Markasi', v('rayMatka')],
+                ['Kapi Tipi', v('kapiDetay')],
+                ['Ana Ray Genisligi', v('anaRayGenislik') + ' cm'],
+                ['Agirlik Ray Genisligi', v('agirlikRayGenislik') + ' cm'],
+                ['Ray Kapi Olcusu', v('rayKapiOlcu') + ' cm'],
+                ['Iki Merkez Olcusu', v('ikiMerkezOlcu') + ' cm'],
+                ['Toplam Ray Boyu', v('rayKapiToplam') + ' MT'],
+                ['Kapi Modeli', v('kapiModeli')],
+                ['Agirlik Yeri', v('agirlikYeri')],
+                ['Kapi Yonu', v('kapiYonu')],
+                ['Teleskopik Kayma', v('teleskopikKayma') + ' cm'],
+                ['Kayma Yonu', v('kaymaYonu')],
+            ];
+            olculer.forEach((r,i) => satir(r[0], r[1], i));
+
+        } else {
+            // SERİ NUMARALARI
+            bolumBaslik('SERI NUMARALARI');
+            // Tablo başlığı
+            doc.setFillColor(245,158,11); doc.rect(10, y-5, 190, 8, 'F');
+            doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(255,255,255);
+            doc.text('PARCA', 14, y); doc.text('MARKA', 80, y); doc.text('SERI NO', 145, y);
+            y += 9;
+            const parcalar = [
+                ['Motor', 'motorM', 'motorS'],
+                ['Pano', 'panoM', 'panoS'],
+                ['Kabin', 'kabinM', 'kabinS'],
+                ['Regulatör', 'regulatorM', 'regulatorS'],
+                ['Fren Cakisi', 'frenM', 'frenS'],
+                ['Kabin Tampon', 'kabinTamponM', 'kabinTamponS'],
+                ['Agirlik Tampon', 'agirlikTamponM', 'agirlikTamponS'],
+            ];
+            parcalar.forEach((p,i) => {
+                if(y > 272) { doc.addPage(); y = 15; }
+                if(i % 2 === 0) { doc.setFillColor(248,250,252); doc.rect(10, y-5, 190, 9, 'F'); }
+                doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(15,23,42);
+                doc.text(tr(p[0]), 14, y);
+                doc.setFont('helvetica','normal'); doc.setTextColor(30,41,59);
+                doc.text(tr(document.getElementById(p[1])?.value||'-'), 80, y);
+                doc.text(tr(document.getElementById(p[2])?.value||'-'), 145, y);
+                y += 10;
+            });
+
+            // KAPILAR
+            bolumBaslik('KAPI SERI NUMARALARI');
+            doc.setFillColor(245,158,11); doc.rect(10, y-5, 190, 8, 'F');
+            doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(255,255,255);
+            doc.text('KAT', 14, y); doc.text('MARKA', 60, y); doc.text('SERI NO', 140, y);
+            y += 9;
+            const kapilar = document.querySelectorAll('.kapi-item');
+            if(kapilar.length === 0) {
+                doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100,116,139);
+                doc.text('Kapi bilgisi girilmemis', 14, y); y += 10;
+            } else {
+                kapilar.forEach((k,i) => {
+                    if(y > 272) { doc.addPage(); y = 15; }
+                    if(i % 2 === 0) { doc.setFillColor(248,250,252); doc.rect(10, y-5, 190, 9, 'F'); }
+                    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(15,23,42);
+                    doc.text('Kat ' + (i+1), 14, y);
+                    doc.setFont('helvetica','normal');
+                    doc.text(tr(k.querySelector('.kapiMarka')?.value||'-'), 60, y);
+                    doc.text(tr(k.querySelector('.kapiSeri')?.value||'-'), 140, y);
+                    y += 10;
+                });
+            }
+        }
+
+        // Not varsa ekle
+        const not = document.getElementById('notlar')?.value?.trim();
+        if(not) {
+            bolumBaslik('NOTLAR');
+            doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(30,41,59);
+            const satirlar = doc.splitTextToSize(tr(not), 182);
+            satirlar.forEach(s => { if(y>272){doc.addPage();y=15;} doc.text(s,14,y); y+=7; });
+        }
+
+        // Alt bilgi
+        doc.setFillColor(248,250,252); doc.rect(0, 285, 210, 12, 'F');
+        doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(148,163,184);
+        doc.text('Isa Keles Montaj Takip', 14, 292);
+        doc.text(tarih, 196, 292, {align:'right'});
+
+        // PDF blob oluştur ve paylaş
+        const pdfBlob = doc.output('blob');
+        const dosyaAdi = (tur==='ray' ? tr(musteri)+'_RayKapi_Olculeri' : tr(musteri)+'_Seri_Numaralari') + '_' + tarih.replace(/\./g,'-') + '.pdf';
+
+        if(navigator.share && navigator.canShare) {
+            const file = new File([pdfBlob], dosyaAdi, { type:'application/pdf' });
+            if(navigator.canShare({ files:[file] })) {
+                try {
+                    await navigator.share({ files:[file], title: dosyaAdi });
+                    return;
+                } catch(e) { /* iptal edildi */ }
+            }
+        }
+        // Paylaşım desteklenmiyorsa indir
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url; a.download = dosyaAdi; a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 3000);
+        alert("PDF indirildi! WhatsApp'tan Dosya secenegiyle gonderebilirsiniz.");
+    }
+
     function escapeHtml(str){if(!str)return '';return str.replace(/[&<>]/g,m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;');}
 
     // Fiyat tablosu
@@ -797,22 +970,22 @@
             ? `⚠️ ${Math.abs(bakiye).toLocaleString('tr-TR')} ₺ Alacağımız Var`
             : `🔴 ${bakiye.toLocaleString('tr-TR')} ₺ Borç (Fazla Ödendi)`;
         const bakiyeStil = bakiye < 0
-            ? 'background:linear-gradient(135deg,#fef08a,#eab308);color:#1e293b;'
-            : 'background:linear-gradient(135deg,#ef4444,#dc2626);color:white;';
+            ? 'background:linear-gradient(135deg,#fbbf24,#d97706);color:#1e293b;box-shadow:0 6px 20px rgba(251,191,36,0.4);'
+            : 'background:linear-gradient(135deg,#f43f5e,#e11d48);color:white;box-shadow:0 6px 20px rgba(244,63,94,0.4);';
 
         let html = `<div class="header"><h1>💰 Muhasebe</h1><p>YARAR ASANSÖR MALİ TAKİP</p></div>
 
         <div class="m-ozet-grid">
             <div class="m-ozet-kart m-yesil">
-                <div class="m-baslik">📈 TOPLAM ALACAK</div>
+                <div class="m-baslik">💰 TOPLAM ALACAK</div>
                 <div class="m-tutar">${toplamAlacak.toLocaleString('tr-TR')} ₺</div>
             </div>
             <div class="m-ozet-kart m-turuncu">
-                <div class="m-baslik">✅ BİTEN İŞLER</div>
+                <div class="m-baslik">🏗️ BİTEN İŞLER</div>
                 <div class="m-tutar">${bitenIsler.length} İş</div>
             </div>
             <div class="m-ozet-kart m-mavi">
-                <div class="m-baslik">💵 ALINAN ÖDEME</div>
+                <div class="m-baslik">💳 ALINAN ÖDEME</div>
                 <div class="m-tutar">${toplamOdeme.toLocaleString('tr-TR')} ₺</div>
             </div>
             <div class="m-ozet-kart" style="${bakiyeStil} border-radius:16px; padding:14px;">
