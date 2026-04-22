@@ -288,7 +288,7 @@
             html += `<div class="project-card" onclick="goToDetail('${rec.id}')">
                 <div class="project-header"><span class="customer-name">${escapeHtml(rec.musteri)||'İsimsiz'}</span><span class="status-badge status-${dc}">${badge}</span></div>
                 <div class="project-location">📍 ${escapeHtml(rec.adres)||'-'}</div>
-                <div class="project-footer"><span>⚙️� ${escapeHtml(rec.tip)||'-'}</span><span>📅 ${rec.baslamaTarihi?formatDateTR(rec.baslamaTarihi):'-'}</span></div>
+                <div class="project-footer"><span>⚙️ ${escapeHtml(rec.tip)||'-'}</span><span>📅 ${rec.baslamaTarihi?formatDateTR(rec.baslamaTarihi):'-'}</span></div>
             </div>`;
         });
         html += `</div><div class="bottom-nav">
@@ -313,7 +313,7 @@
             baslamaTarihi: formatDate(), bitisTarihi: '', kapasite: '', tip: 'Dişlili (Makine Daireli)', marka: '', notlar: '',
             kuyuG:'',kuyuD:'',kuyuY:'',kuyuDibi:'',tavanArasi:'',rayBoyu:'',
             anaRayGenislik:'',agirlikRayGenislik:'',rayKapiOlcu:'',ikiMerkezOlcu:'',
-            rayKapiToplam:'',rayKatSayisi:1,kapiModeli:'Teleskopik',agirlikYeri:'Arkadan Ağırlık',
+            rayKapiToplam:'',rayKuyuG:'',rayKuyuD:'',rayKatSayisi:1,kapiModeli:'Teleskopik',agirlikYeri:'Arkadan Ağırlık',
             kapiYonu:'Sağ',teleskopikKayma:'',kaymaYonu:'Sağa',durakSayisi:1,
             motorM:'',motorS:'',panoM:'',panoS:'',kabinM:'',kabinS:'',
             regulatorM:'',regulatorS:'',frenM:'',frenS:'',kabinTamponM:'',kabinTamponS:'',agirlikTamponM:'',agirlikTamponS:'',
@@ -399,6 +399,10 @@
                 </div>
                 <div class="row">
                     <div class="measure-item" style="flex:2;"><div class="measure-label">Kapı Tipi</div><input type="text" id="kapiDetay" placeholder="Kapı Tipi yazın" value="${escapeHtml(record.kapiDetay||'')}"></div>
+                </div>
+                <div class="row">
+                    <div class="measure-item"><div class="measure-label">Kuyu Genişlik (cm)</div><input type="number" id="rayKuyuG" placeholder="cm" value="${record.rayKuyuG||''}"></div>
+                    <div class="measure-item"><div class="measure-label">Kuyu Derinlik (cm)</div><input type="number" id="rayKuyuD" placeholder="cm" value="${record.rayKuyuD||''}"></div>
                 </div>
                 <div class="row">
                     <div class="measure-item"><div class="measure-label">Ana Ray Genişliği (cm)</div><input type="number" id="anaRayGenislik" placeholder="cm" value="${record.anaRayGenislik||''}"></div>
@@ -640,6 +644,8 @@
             rec.kaymaYonu=document.getElementById('kaymaYonu').value;
             rec.rayKatSayisi=parseInt(document.getElementById('rayKatSayisi').value)||1;
             rec.durakSayisi=rec.rayKatSayisi; // Muhasebe hesabı için
+            rec.rayKuyuG=document.getElementById('rayKuyuG')?.value||'';
+            rec.rayKuyuD=document.getElementById('rayKuyuD')?.value||'';
             rec.rayMarkasi=document.getElementById('rayMarkasi').value;
             rec.rayMatka=document.getElementById('rayMatka').value;
             rec.kapiDetay=document.getElementById('kapiDetay').value;
@@ -659,7 +665,7 @@
             rec.frenM=document.getElementById('frenM').value;rec.frenS=document.getElementById('frenS').value;
             rec.kabinTamponM=document.getElementById('kabinTamponM').value;rec.kabinTamponS=document.getElementById('kabinTamponS').value;
             rec.agirlikTamponM=document.getElementById('agirlikTamponM').value;rec.agirlikTamponS=document.getElementById('agirlikTamponS').value;
-            rec.anaRayGenislik=rec.agirlikRayGenislik=rec.rayKapiOlcu=rec.ikiMerkezOlcu=rec.rayKapiToplam=''; rec.rayKatSayisi=0;
+            rec.anaRayGenislik=rec.agirlikRayGenislik=rec.rayKapiOlcu=rec.ikiMerkezOlcu=rec.rayKapiToplam=''; rec.rayKatSayisi=0; rec.rayKuyuG=''; rec.rayKuyuD='';
             rec.kapiModeli='Teleskopik';rec.agirlikYeri='Arkadan Ağırlık';rec.kapiYonu='Sağ';rec.teleskopikKayma='';rec.kaymaYonu='Sağa';
             rec.rayMarkasi='';rec.rayMatka='';rec.kapiDetay='';
         }
@@ -697,6 +703,8 @@
                 <div>Ray Markası: ${rec.rayMarkasi||'-'}</div>
                 <div>Kapı Markası: ${rec.rayMatka||'-'}</div>
                 <div>Kapı Tipi: ${rec.kapiDetay||'-'}</div>
+                <div>Kuyu Genişlik: ${rec.rayKuyuG||'-'} cm</div>
+                <div>Kuyu Derinlik: ${rec.rayKuyuD||'-'} cm</div>
                 <div>Ana Ray Genişliği: ${rec.anaRayGenislik||'-'} cm</div>
                 <div>Ağırlık Ray Genişliği: ${rec.agirlikRayGenislik||'-'} cm</div>
                 <div>Ray Kapı Ölçüsü: ${rec.rayKapiOlcu||'-'} cm</div>
