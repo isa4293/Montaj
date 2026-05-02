@@ -23,7 +23,7 @@
         .stat-card { background: #ffffff; border-radius: 20px; padding: 12px 8px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .stat-number { font-size: 28px; font-weight: 800; color: #f59e0b; }
         .stat-label { font-size: 11px; color: #64748b; margin-top: 6px; }
-        .search-box { background: #ffffff; border-radius: 30px; padding: 8px 18px; border: 1px solid #e2e8f0; margin-bottom: 16px; display: flex; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .search-box { background: #ffffff; border-radius: 30px; padding: 12px 18px; border: 1px solid #e2e8f0; margin-bottom: 16px; display: flex; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .search-box input { background: transparent; border: none; color: #1e293b; font-size: 15px; flex: 1; outline: none; }
         .filter-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
         .filter-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 40px; padding: 8px 16px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
@@ -326,7 +326,7 @@
             html += `<div class="project-card" onclick="goToDetail('${rec.id}')">
                 <div class="project-header"><span class="customer-name">${escapeHtml(rec.musteri)||'İsimsiz'}</span><span class="status-badge status-${dc}">${badge}</span></div>
                 <div class="project-location">📍 ${escapeHtml(rec.adres)||'-'}</div>
-                <div class="project-footer"><span>⚙️ ${escapeHtml(rec.tip)||'-'}</span><span>📅 ${rec.baslamaTarihi?formatDateTR(rec.baslamaTarihi):'-'}</span></div>
+                <div class="project-footer"><span>🏢 ${escapeHtml(rec.binaAdi)||'-'}</span><span>📅 ${rec.baslamaTarihi?formatDateTR(rec.baslamaTarihi):'-'}</span></div>
             </div>`;
         });
         html += `</div><div class="bottom-nav">
@@ -780,8 +780,34 @@
             <div style="margin-bottom:8px;">➕ ${escapeHtml(rec.masrafExtraAdi)||'Extra'}: <b>${rec.masrafExtra?rec.masrafExtra+' ₺':'-'}</b></div>
             <div class="masraf-toplam">Toplam: ${toplamMasraf} ₺</div>
         </div>
-        <button onclick="editRecord('${rec.id}')">✏️ DÜZENLE</button>
-        <button onclick="deleteRecord('${rec.id}')" style="background:#dc2626;">🗑️ SİL</button>`;
+        <div class="section"><div class="section-title">📝 İŞ NOTLARI & FOTOĞRAFLAR</div>`;
+
+        const isNotlari = rec.isNotlari ? Object.values(rec.isNotlari).sort((a,b) => b.tarih>a.tarih?1:-1) : [];
+        if(isNotlari.length > 0) {
+            isNotlari.forEach(n => {
+                html += '<div class="not-kart">';
+                if(n.baslik) html += '<div class="not-baslik">'+escapeHtml(n.baslik)+'</div>';
+                if(n.metin) html += '<div class="not-metin">'+escapeHtml(n.metin)+'</div>';
+                if(n.fotolar && n.fotolar.length > 0) {
+                    html += '<div class="not-foto-grid">';
+                    n.fotolar.forEach(f => {
+                        html += '<div class="not-foto-item" onclick="fotoBuyukGoster(this.querySelector(\'img\').src)"><img src="'+f+'" loading="lazy"></div>';
+                    });
+                    html += '</div>';
+                }
+                html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">';
+                html += '<div class="not-tarih">'+formatDateTR(n.tarih.substring(0,10))+'</div>';
+                html += '<button onclick="isNotuSil(\''+rec.id+'\',\''+n.id+'\')" style="background:#fee2e2;color:#dc2626;width:auto;padding:4px 12px;font-size:11px;margin:0;box-shadow:none;border-radius:20px;">Sil</button>';
+                html += '</div>';
+                html += '</div>';
+            });
+        } else {
+            html += '<div style="color:#94a3b8;font-size:13px;text-align:center;padding:10px 0;">Henüz not eklenmemiş</div>';
+        }
+        html += '<button onclick="isNotuEkle(\''+rec.id+'\')" style="margin-top:8px;background:linear-gradient(135deg,#f59e0b,#f97316);padding:11px;font-size:13px;">📷 Not / Fotoğraf Ekle</button>';
+        html += '</div>';
+        html += '<button onclick="editRecord(\''+rec.id+'\')">✏️ DÜZENLE</button>';
+        html += '<button onclick="deleteRecord(\''+rec.id+'\')" style="background:#dc2626;">🗑️ SİL</button>';
         document.getElementById('app').innerHTML=html;
     }
 
@@ -1236,7 +1262,8 @@
                 html += '<div class="not-kart">' +
                     '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
                         '<div class="not-baslik">' + escapeHtml(not.baslik) + '</div>' +
-                        '<button onclick="notSil(\''+kid+'\',\''+not.id+'\')" style="background:#fee2e2;color:#dc2626;width:auto;padding:4px 10px;font-size:11px;margin:0;box-shadow:none;border-radius:20px;flex-shrink:0;">Sil</button>' +
+                        '<button onclick="notDuzenle(\''+kid+'\',\''+not.id+'\')" style="background:#fff7ed;color:#f59e0b;border:1px solid #fed7aa;width:auto;padding:4px 10px;font-size:11px;margin:0;box-shadow:none;border-radius:20px;flex-shrink:0;margin-right:4px;">Düzenle</button>' +
+                    '<button onclick="notSil(\''+kid+'\',\''+not.id+'\')" style="background:#fee2e2;color:#dc2626;width:auto;padding:4px 10px;font-size:11px;margin:0;box-shadow:none;border-radius:20px;flex-shrink:0;">Sil</button>' +
                     '</div>';
                 if (not.metin) html += '<div class="not-metin">' + escapeHtml(not.metin) + '</div>';
                 if (not.fotolar && not.fotolar.length > 0) {
@@ -1306,7 +1333,7 @@
         document.getElementById('notFotoInput').addEventListener('change', function() {
             const prev = document.getElementById('notFotoOnizleme');
             prev.innerHTML = '';
-            Array.from(this.files).slice(0,6).forEach(file => {
+            Array.from(this.files).forEach(file => {
                 const r = new FileReader();
                 r.onload = e => {
                     const img = document.createElement('img');
@@ -1333,7 +1360,7 @@
         // Fotoğrafları sıkıştır
         if (files.length > 0) {
             syncGoster('yukleniyor');
-            fotolar = await Promise.all(files.slice(0,6).map(file => new Promise(resolve => {
+            fotolar = await Promise.all(files.map(file => new Promise(resolve => {
                 const reader = new FileReader();
                 reader.onload = e => {
                     const img = new Image();
@@ -1361,10 +1388,245 @@
             .catch(() => syncGoster('hata'));
     }
 
+    function notDuzenle(kid, nid) {
+        const klasor = notlarData[kid];
+        if(!klasor || !klasor.notlar) return;
+        const not = klasor.notlar[nid];
+        if(!not) return;
+
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:flex-end;';
+        overlay.id = 'notDuzenleOverlay';
+
+        // Silinecek fotoğraf indexlerini tut
+        window._duzSilinecekFotolar = new Set();
+        let fotoOnizlemeHtml = '';
+        if(not.fotolar && not.fotolar.length > 0) {
+            fotoOnizlemeHtml = '<div style="margin-bottom:8px;"><div style="font-size:12px;color:#64748b;margin-bottom:6px;font-weight:600;">📷 Mevcut Fotoğraflar (✕ ile silebilirsiniz)</div>' +
+                '<div id="duzMevcutFotolar" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">' +
+                not.fotolar.map((f,i) =>
+                    '<div id="duzfoto_'+i+'" style="position:relative;aspect-ratio:1;">' +
+                        '<img src="'+f+'" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">' +
+                        '<button onclick="duzFotoSil('+i+')" style="position:absolute;top:3px;right:3px;background:rgba(220,38,38,0.9);color:white;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;padding:0;margin:0;box-shadow:none;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>' +
+                    '</div>'
+                ).join('') +
+                '</div></div>';
+        }
+
+        overlay.innerHTML =
+            '<div style="background:#fff;border-radius:24px 24px 0 0;padding:24px;width:100%;max-height:90vh;overflow-y:auto;">' +
+                '<div style="font-size:18px;font-weight:800;color:#1e293b;margin-bottom:16px;">✏️ Notu Düzenle</div>' +
+                '<input type="text" id="duzBaslik" placeholder="Başlık" value="'+escapeHtml(not.baslik||'')+'" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:14px;font-size:14px;margin-bottom:10px;">' +
+                '<textarea id="duzMetin" placeholder="Not içeriği..." rows="5" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:14px;font-size:14px;margin-bottom:10px;resize:none;">'+escapeHtml(not.metin||'')+'</textarea>' +
+                fotoOnizlemeHtml +
+                '<div style="margin-bottom:12px;">' +
+                    '<div style="font-size:12px;color:#64748b;margin-bottom:6px;font-weight:600;">📷 Yeni Fotoğraf Ekle (isteğe bağlı)</div>' +
+                    '<input type="file" id="duzFotoInput" accept="image/*" multiple style="width:100%;padding:8px;border:1px dashed #e2e8f0;border-radius:12px;font-size:13px;">' +
+                    '<div id="duzFotoOnizleme" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px;"></div>' +
+                '</div>' +
+                '<div style="display:flex;gap:10px;">' +
+                    '<button onclick="notDuzenleKaydet(\''+kid+'\',\''+nid+'\')" style="flex:2;background:linear-gradient(135deg,#f59e0b,#f97316);">💾 Kaydet</button>' +
+                    '<button onclick="notDuzenleKapat()" style="flex:1;background:#f1f5f9;color:#64748b;box-shadow:none;">İptal</button>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', e => { if(e.target===overlay) notDuzenleKapat(); });
+
+        document.getElementById('duzFotoInput')?.addEventListener('change', function() {
+            const prev = document.getElementById('duzFotoOnizleme');
+            if(!prev) return;
+            prev.innerHTML = '';
+            Array.from(this.files).forEach(file => {
+                const r = new FileReader();
+                r.onload = e => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.cssText = 'width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;';
+                    prev.appendChild(img);
+                };
+                r.readAsDataURL(file);
+            });
+        });
+    }
+
+    function duzFotoSil(idx) {
+        window._duzSilinecekFotolar = window._duzSilinecekFotolar || new Set();
+        window._duzSilinecekFotolar.add(idx);
+        const el = document.getElementById('duzfoto_'+idx);
+        if(el) { el.style.opacity='0.3'; el.querySelector('button').textContent='✓'; el.querySelector('button').style.background='rgba(34,197,94,0.9)'; }
+    }
+
+    function notDuzenleKapat() {
+        window._duzSilinecekFotolar = new Set();
+        const el = document.getElementById('notDuzenleOverlay');
+        if(el) el.remove();
+    }
+
+    async function notDuzenleKaydet(kid, nid) {
+        const baslik = document.getElementById('duzBaslik')?.value?.trim();
+        const metin = document.getElementById('duzMetin')?.value?.trim() || '';
+        if(!baslik) { alert('Başlık boş olamaz!'); return; }
+
+        const klasor = notlarData[kid];
+        if(!klasor || !klasor.notlar || !klasor.notlar[nid]) return;
+        const eskiNot = klasor.notlar[nid];
+
+        // Yeni fotoğrafları işle
+        const fotoInput = document.getElementById('duzFotoInput');
+        const yeniFotolar = fotoInput ? Array.from(fotoInput.files) : [];
+        // Silinecek fotoğrafları çıkar
+        const silinecekler = window._duzSilinecekFotolar || new Set();
+        let fotolar = (eskiNot.fotolar || []).filter((_, idx) => !silinecekler.has(idx));
+
+        if(yeniFotolar.length > 0) {
+            syncGoster('yukleniyor');
+            const sikisFotolar = await Promise.all(yeniFotolar.map(file => new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const max = 800;
+                        const ratio = Math.min(max/img.width, max/img.height, 1);
+                        canvas.width = img.width * ratio;
+                        canvas.height = img.height * ratio;
+                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.65));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            })));
+            fotolar = [...fotolar, ...sikisFotolar];
+        }
+
+        const yeniNot = {
+            id: nid,
+            baslik: baslik,
+            metin: metin,
+            fotolar: fotolar,
+            tarih: eskiNot.tarih,
+            duzenlemeTarihi: new Date().toISOString()
+        };
+
+        notDuzenleKapat();
+        syncGoster('yukleniyor');
+        notlarRef.child(kid).child('notlar').child(nid).set(yeniNot)
+            .then(() => syncGoster('ok'))
+            .catch(() => syncGoster('hata'));
+    }
+
     function notSil(kid, nid) {
         if (!confirm('Bu not silinsin mi?')) return;
         notlarRef.child(kid).child('notlar').child(nid).remove()
             .then(() => syncGoster('ok'))
+            .catch(() => syncGoster('hata'));
+    }
+
+    function isNotuEkle(recId) {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:flex-end;';
+        overlay.id = 'isNotOverlay';
+        overlay.innerHTML =
+            '<div style="background:#fff;border-radius:24px 24px 0 0;padding:24px;width:100%;max-height:90vh;overflow-y:auto;">' +
+                '<div style="font-size:17px;font-weight:800;color:#1e293b;margin-bottom:14px;">📝 Not / Fotoğraf Ekle</div>' +
+                '<input type="text" id="isNotBaslik" placeholder="Başlık (isteğe bağlı)" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:14px;font-size:14px;margin-bottom:10px;">' +
+                '<textarea id="isNotMetin" placeholder="Not..." rows="4" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:14px;font-size:14px;margin-bottom:10px;resize:none;"></textarea>' +
+                '<div style="margin-bottom:12px;">' +
+                    '<div style="font-size:12px;color:#64748b;margin-bottom:6px;font-weight:600;">📷 Fotoğraf Ekle</div>' +
+                    '<input type="file" id="isNotFoto" accept="image/*" multiple style="width:100%;padding:8px;border:1px dashed #e2e8f0;border-radius:12px;font-size:13px;">' +
+                    '<div id="isNotFotoOnizleme" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;"></div>' +
+                '</div>' +
+                '<div style="display:flex;gap:10px;">' +
+                    '<button onclick="isNotuKaydet(\''+recId+'\')" style="flex:2;background:linear-gradient(135deg,#f59e0b,#f97316);">💾 Kaydet</button>' +
+                    '<button onclick="isNotOverlayKapat()" style="flex:1;background:#f1f5f9;color:#64748b;box-shadow:none;">İptal</button>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', e => { if(e.target===overlay) isNotOverlayKapat(); });
+        document.getElementById('isNotFoto')?.addEventListener('change', function() {
+            const prev = document.getElementById('isNotFotoOnizleme');
+            if(!prev) return;
+            prev.innerHTML = '';
+            Array.from(this.files).forEach(file => {
+                const r = new FileReader();
+                r.onload = e => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.cssText = 'width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;';
+                    prev.appendChild(img);
+                };
+                r.readAsDataURL(file);
+            });
+        });
+    }
+
+    function isNotOverlayKapat() {
+        const el = document.getElementById('isNotOverlay');
+        if(el) el.remove();
+    }
+
+    async function isNotuKaydet(recId) {
+        const baslik = document.getElementById('isNotBaslik')?.value?.trim() || '';
+        const metin = document.getElementById('isNotMetin')?.value?.trim() || '';
+        const fotoInput = document.getElementById('isNotFoto');
+        const files = fotoInput ? Array.from(fotoInput.files) : [];
+
+        if(!baslik && !metin && files.length === 0) {
+            alert('En az bir şey girin!'); return;
+        }
+
+        let fotolar = [];
+        if(files.length > 0) {
+            syncGoster('yukleniyor');
+            fotolar = await Promise.all(files.map(file => new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const max = 800;
+                        const ratio = Math.min(max/img.width, max/img.height, 1);
+                        canvas.width = img.width * ratio;
+                        canvas.height = img.height * ratio;
+                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.65));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            })));
+        }
+
+        const nid = 'in_' + Date.now();
+        const not = { id:nid, baslik, metin, fotolar, tarih: new Date().toISOString() };
+        isNotOverlayKapat();
+        syncGoster('yukleniyor');
+        kayitlarRef.child(recId).child('isNotlari').child(nid).set(not)
+            .then(() => {
+                syncGoster('ok');
+                // Lokal güncelle
+                const rec = records.find(r => r.id === recId);
+                if(rec) {
+                    if(!rec.isNotlari) rec.isNotlari = {};
+                    rec.isNotlari[nid] = not;
+                    renderDetail(recId);
+                }
+            })
+            .catch(() => syncGoster('hata'));
+    }
+
+    function isNotuSil(recId, nid) {
+        if(!confirm('Bu not silinsin mi?')) return;
+        kayitlarRef.child(recId).child('isNotlari').child(nid).remove()
+            .then(() => {
+                syncGoster('ok');
+                const rec = records.find(r => r.id === recId);
+                if(rec && rec.isNotlari) {
+                    delete rec.isNotlari[nid];
+                    renderDetail(recId);
+                }
+            })
             .catch(() => syncGoster('hata'));
     }
 
