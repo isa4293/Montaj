@@ -70,6 +70,22 @@
         .bakiye-limon { background: linear-gradient(135deg,#fef08a,#eab308); color:#1e293b; border-radius:14px; padding:14px; text-align:center; font-weight:800; font-size:17px; margin-bottom:12px; }
         .bakiye-borclu { background: linear-gradient(135deg,#fee2e2,#fca5a5); color:#dc2626; border-radius:14px; padding:14px; text-align:center; font-weight:800; font-size:17px; margin-bottom:12px; }
         .pdf-btn { background:linear-gradient(135deg,#25d366,#128c7e); color:white; border:none; padding:13px; border-radius:20px; font-weight:700; font-size:14px; width:100%; cursor:pointer; margin-bottom:8px; box-shadow:0 4px 14px rgba(37,211,102,0.4); }
+        /* NOTLAR */
+        .klasor-kart { background:#fff; border-radius:18px; padding:16px; margin-bottom:12px; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.06); cursor:pointer; display:flex; align-items:center; gap:12px; }
+        .klasor-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+        .klasor-bilgi { flex:1; }
+        .klasor-adi { font-size:16px; font-weight:700; color:#1e293b; }
+        .klasor-alt { font-size:12px; color:#64748b; margin-top:2px; }
+        .not-kart { background:#fff; border-radius:16px; padding:14px; margin-bottom:10px; border:1px solid #e2e8f0; box-shadow:0 2px 6px rgba(0,0,0,0.05); }
+        .not-baslik { font-size:15px; font-weight:700; color:#1e293b; margin-bottom:6px; }
+        .not-metin { font-size:13px; color:#475569; white-space:pre-wrap; line-height:1.5; }
+        .not-foto-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+        .not-foto-item { aspect-ratio:1; border-radius:10px; overflow:hidden; background:#f1f5f9; cursor:pointer; }
+        .not-foto-item img { width:100%; height:100%; object-fit:cover; }
+        .not-tarih { font-size:11px; color:#94a3b8; margin-top:8px; }
+        .foto-buyuk-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:99999; display:flex; align-items:center; justify-content:center; }
+        .foto-buyuk-overlay img { max-width:95vw; max-height:88vh; border-radius:12px; object-fit:contain; }
+        .foto-buyuk-kapat { position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.2); color:white; border:none; border-radius:50%; width:40px; height:40px; font-size:20px; cursor:pointer; margin:0; padding:0; box-shadow:none; width:40px; }
         #syncBar { position: fixed; top: 0; left: 0; right: 0; text-align: center; font-size: 13px; font-weight: 600; padding: 6px; z-index: 10000; display: none; }
         .sync-ok { background: #22c55e; color: white; }
         .sync-loading { background: #f59e0b; color: white; }
@@ -118,16 +134,23 @@
     // Telefon geri tuşu yönetimi
     window.addEventListener('popstate', function(e) {
         if (currentPage === 'list') {
-            // Ana sayfadaysa tarayıcı kapansın (normal davranış)
             return;
         } else if (currentPage === 'detail' || currentPage === 'form') {
             e.preventDefault();
             changePage('list');
-            history.pushState({page:'list'}, '', '');
+            history.pushState({page:'list'},'','');
         } else if (currentPage === 'muhasebe') {
             e.preventDefault();
             changePage('list');
-            history.pushState({page:'list'}, '', '');
+            history.pushState({page:'list'},'','');
+        } else if (currentPage === 'notlar') {
+            e.preventDefault();
+            changePage('list');
+            history.pushState({page:'list'},'','');
+        } else if (currentPage === 'klasor') {
+            e.preventDefault();
+            changePage('notlar');
+            history.pushState({page:'notlar'},'','');
         }
     });
 
@@ -138,6 +161,7 @@
     const db = firebase.database();
     const kayitlarRef = db.ref('kayitlar');
     const odemeRef = db.ref('yaarAsansorOdemeler');
+    const notlarRef = db.ref('notlar');
 
     const SIFRE = 'Keleş42';
     const SIFRE_SURE = 24 * 60 * 60 * 1000;
@@ -148,6 +172,8 @@
     let editId = null;
     let currentFilter = 'all';
     let searchText = '';
+    let notlarData = {};
+    let currentKlasor = null;
 
     function syncGoster(durum, sure = 2000) {
         const bar = document.getElementById('syncBar');
@@ -201,6 +227,11 @@
         odemeRef.on('value', (snapshot) => {
             muhasebeData.odemeler = snapshot.val() || {};
             if (currentPage === 'muhasebe') renderMuhasebe();
+        });
+        notlarRef.on('value', (snapshot) => {
+            notlarData = snapshot.val() || {};
+            if (currentPage === 'notlar') renderNotlar();
+            else if (currentPage === 'klasor') renderKlasor(currentKlasor);
         });
     }
 
@@ -295,13 +326,14 @@
             html += `<div class="project-card" onclick="goToDetail('${rec.id}')">
                 <div class="project-header"><span class="customer-name">${escapeHtml(rec.musteri)||'İsimsiz'}</span><span class="status-badge status-${dc}">${badge}</span></div>
                 <div class="project-location">📍 ${escapeHtml(rec.adres)||'-'}</div>
-                <div class="project-footer"><span>⚙️� ${escapeHtml(rec.tip)||'-'}</span><span>📅 ${rec.baslamaTarihi?formatDateTR(rec.baslamaTarihi):'-'}</span></div>
+                <div class="project-footer"><span>⚙️ ${escapeHtml(rec.tip)||'-'}</span><span>📅 ${rec.baslamaTarihi?formatDateTR(rec.baslamaTarihi):'-'}</span></div>
             </div>`;
         });
         html += `</div><div class="bottom-nav">
             <div class="nav-item ${currentPage==='list'?'active':''}" onclick="changePage('list')">📋 LİSTE</div>
             <div class="nav-item" onclick="newRecord()">➕ YENİ</div>
             <div class="nav-item" onclick="changePage('muhasebe')">💰 MUHASEBE</div>
+            <div class="nav-item" onclick="changePage('notlar')">📒 NOTLAR</div>
         </div>`;
         document.getElementById('app').innerHTML = html;
         const si = document.getElementById('searchInput');
@@ -324,7 +356,7 @@
             kapiYonu:'Sağ',teleskopikKayma:'',kaymaYonu:'Sağa',durakSayisi:1,
             motorM:'',motorS:'',panoM:'',panoS:'',kabinM:'',kabinS:'',
             regulatorM:'',regulatorS:'',frenM:'',frenS:'',kabinTamponM:'',kabinTamponS:'',agirlikTamponM:'',agirlikTamponS:'',
-            kapilar:[],masrafYol:'',masrafYemek:'',masrafExtraAdi:'',masrafExtra:'',iskeleSokKat:0,iskeleSokFiyat:500,iskeleSokToplam:0,iskeleKurKat:0,iskeleKurFiyat:500,iskeleKurToplam:0,katBasiFiyat:12250,
+            kapilar:[],masrafYol:'',masrafYemek:'',masrafExtraAdi:'',masrafExtra:'',iskeleSokKat:0,iskeleSokFiyat:750,iskeleSokToplam:0,iskeleKurKat:0,iskeleKurFiyat:750,iskeleKurToplam:0,katBasiFiyat:12250,
             kacKisilik:'',kapiTipi:'',rayMarkasi:'',rayMatka:'',kapiDetay:''
         };
         editId = record.id;
@@ -465,7 +497,7 @@
                 <div style="font-weight:700;color:#1e293b;margin-bottom:8px;">İskele Sökme</div>
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                     <div style="flex:1;min-width:80px;"><div class="measure-label">Kat Sayısı</div><input type="number" id="iskeleSokKat" placeholder="Kat" value="${record.iskeleSokKat||0}" oninput="iskeleHesapla()" style="margin-bottom:0;"></div>
-                    <div style="flex:1;min-width:80px;"><div class="measure-label">Kat Fiyatı (₺)</div><input type="number" id="iskeleSokFiyat" placeholder="₺" value="${record.iskeleSokFiyat||500}" oninput="iskeleHesapla()" style="margin-bottom:0;"></div>
+                    <div style="flex:1;min-width:80px;"><div class="measure-label">Kat Fiyatı (₺)</div><input type="number" id="iskeleSokFiyat" placeholder="₺" value="${record.iskeleSokFiyat||750}" oninput="iskeleHesapla()" style="margin-bottom:0;"></div>
                     <div style="flex:1;min-width:80px;"><div class="measure-label">Toplam</div><input type="number" id="iskeleSokToplam" placeholder="₺" value="${record.iskeleSokToplam||0}" readonly style="margin-bottom:0;background:#e2e8f0;font-weight:700;color:#f59e0b;"></div>
                 </div>
             </div>
@@ -473,7 +505,7 @@
                 <div style="font-weight:700;color:#1e293b;margin-bottom:8px;">İskele Kurma</div>
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                     <div style="flex:1;min-width:80px;"><div class="measure-label">Kat Sayısı</div><input type="number" id="iskeleKurKat" placeholder="Kat" value="${record.iskeleKurKat||0}" oninput="iskeleHesapla()" style="margin-bottom:0;"></div>
-                    <div style="flex:1;min-width:80px;"><div class="measure-label">Kat Fiyatı (₺)</div><input type="number" id="iskeleKurFiyat" placeholder="₺" value="${record.iskeleKurFiyat||500}" oninput="iskeleHesapla()" style="margin-bottom:0;"></div>
+                    <div style="flex:1;min-width:80px;"><div class="measure-label">Kat Fiyatı (₺)</div><input type="number" id="iskeleKurFiyat" placeholder="₺" value="${record.iskeleKurFiyat||750}" oninput="iskeleHesapla()" style="margin-bottom:0;"></div>
                     <div style="flex:1;min-width:80px;"><div class="measure-label">Toplam</div><input type="number" id="iskeleKurToplam" placeholder="₺" value="${record.iskeleKurToplam||0}" readonly style="margin-bottom:0;background:#e2e8f0;font-weight:700;color:#f59e0b;"></div>
                 </div>
             </div>
@@ -524,10 +556,10 @@
 
     window.iskeleHesapla = function() {
         const sokKat = parseFloat(document.getElementById('iskeleSokKat')?.value||0);
-        const sokFiyat = parseFloat(document.getElementById('iskeleSokFiyat')?.value||500);
+        const sokFiyat = parseFloat(document.getElementById('iskeleSokFiyat')?.value||750);
         const sokToplam = sokKat * sokFiyat;
         const kurKat = parseFloat(document.getElementById('iskeleKurKat')?.value||0);
-        const kurFiyat = parseFloat(document.getElementById('iskeleKurFiyat')?.value||500);
+        const kurFiyat = parseFloat(document.getElementById('iskeleKurFiyat')?.value||750);
         const kurToplam = kurKat * kurFiyat;
         const sokEl = document.getElementById('iskeleSokToplam');
         const kurEl = document.getElementById('iskeleKurToplam');
@@ -631,10 +663,10 @@
             masrafExtraAdi:document.getElementById('masrafExtraAdi')?.value||'',
             masrafExtra:document.getElementById('masrafExtra')?.value||'',
             iskeleSokKat:parseFloat(document.getElementById('iskeleSokKat')?.value||0),
-            iskeleSokFiyat:parseFloat(document.getElementById('iskeleSokFiyat')?.value||500),
+            iskeleSokFiyat:parseFloat(document.getElementById('iskeleSokFiyat')?.value||750),
             iskeleSokToplam:parseFloat(document.getElementById('iskeleSokToplam')?.value||0),
             iskeleKurKat:parseFloat(document.getElementById('iskeleKurKat')?.value||0),
-            iskeleKurFiyat:parseFloat(document.getElementById('iskeleKurFiyat')?.value||500),
+            iskeleKurFiyat:parseFloat(document.getElementById('iskeleKurFiyat')?.value||750),
             iskeleKurToplam:parseFloat(document.getElementById('iskeleKurToplam')?.value||0),
             katBasiFiyat:parseFloat(document.getElementById('katBasiFiyat')?.value)||FIYATLAR[tip]||12250
         };
@@ -759,11 +791,27 @@
     function goToDetail(id){changePage('detail',id);}
     function changePage(page,id=null){
         currentPage=page;
-        if(page==='list') renderList();
-
-        else if(page==='form') renderForm(null);
-        else if(page==='detail'&&id) renderDetail(id);
-        else if(page==='muhasebe') renderMuhasebe();
+        if(page==='list'){
+            renderList();
+            history.replaceState({page:'list'},'','');
+        } else if(page==='form'){
+            renderForm(null);
+            history.pushState({page:'form'},'','');
+        } else if(page==='detail'&&id){
+            renderDetail(id);
+            history.pushState({page:'detail',id:id},'','');
+        } else if(page==='muhasebe'){
+            renderMuhasebe();
+            history.pushState({page:'muhasebe'},'','');
+        } else if(page==='notlar'){
+            currentKlasor=null;
+            renderNotlar();
+            history.pushState({page:'notlar'},'','');
+        } else if(page==='klasor'&&id){
+            currentKlasor=id;
+            renderKlasor(id);
+            history.pushState({page:'klasor',id:id},'','');
+        }
     }
     function setFilter(filter) {
         currentFilter = filter;
@@ -1077,6 +1125,7 @@
             <div class="nav-item" onclick="changePage('list')">📋 LİSTE</div>
             <div class="nav-item" onclick="newRecord()">➕ YENİ</div>
             <div class="nav-item active" onclick="changePage('muhasebe')">💰 MUHASEBE</div>
+            <div class="nav-item" onclick="changePage('notlar')">📒 NOTLAR</div>
         </div>`;
 
         document.getElementById('app').innerHTML = html;
@@ -1102,6 +1151,230 @@
         odemeRef.child(odemeId).remove()
             .then(() => syncGoster('ok'))
             .catch(() => syncGoster('hata'));
+    }
+
+
+    // ============ NOTLAR ============
+    const KLASOR_RENKLER = [
+        {bg:'linear-gradient(135deg,#f59e0b,#f97316)',emoji:'📁'},
+        {bg:'linear-gradient(135deg,#3b82f6,#2563eb)',emoji:'📂'},
+        {bg:'linear-gradient(135deg,#10b981,#059669)',emoji:'🗂️'},
+        {bg:'linear-gradient(135deg,#8b5cf6,#7c3aed)',emoji:'📋'},
+        {bg:'linear-gradient(135deg,#ef4444,#dc2626)',emoji:'📌'},
+        {bg:'linear-gradient(135deg,#06b6d4,#0284c7)',emoji:'📎'},
+    ];
+
+    function notlarNav(aktif) {
+        var lA = aktif==='list' ? ' active' : '';
+        var nA = aktif==='notlar' ? ' active' : '';
+        return '<div class="bottom-nav">' +
+            '<div class="nav-item'+lA+'" onclick="changePage(\'list\')">📋 LİSTE</div>' +
+            '<div class="nav-item" onclick="newRecord()">➕ YENİ</div>' +
+            '<div class="nav-item" onclick="changePage(\'muhasebe\')">💰 MUHASEBE</div>' +
+            '<div class="nav-item'+nA+'" onclick="changePage(\'notlar\')">📒 NOTLAR</div>' +
+        '</div>';
+    }
+
+    function renderNotlar() {
+        const klasorler = Object.entries(notlarData);
+        let html = '<div class="header"><div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:6px;">' +
+            '<div style="width:44px;height:44px;background:linear-gradient(135deg,#f59e0b,#f97316);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;">📒</div>' +
+            '<div style="text-align:left;"><div style="font-size:20px;font-weight:900;color:#1e293b;">Notlar</div>' +
+            '<div style="font-size:11px;color:#94a3b8;font-weight:600;letter-spacing:1px;">KİŞİSEL ARŞİV</div></div></div></div>';
+
+        html += '<button onclick="klasorEkle()" style="margin-bottom:16px;background:linear-gradient(135deg,#f59e0b,#f97316);">📁 Yeni Klasör Oluştur</button>';
+
+        if (klasorler.length === 0) {
+            html += '<div style="text-align:center;padding:40px;color:#94a3b8;">' +
+                '<div style="font-size:48px;margin-bottom:12px;">📂</div>' +
+                '<div style="font-weight:600;">Henüz klasör yok</div>' +
+                '<div style="font-size:13px;margin-top:6px;">Yukarıdan klasör oluştur</div></div>';
+        } else {
+            klasorler.forEach(([kid, klasor]) => {
+                const notSayisi = klasor.notlar ? Object.keys(klasor.notlar).length : 0;
+                const renkIdx = (klasor.renkIdx || 0) % KLASOR_RENKLER.length;
+                const renk = KLASOR_RENKLER[renkIdx];
+                html += '<div class="klasor-kart" onclick="changePage(\'klasor\',\''+kid+'\')">' +
+                    '<div class="klasor-icon" style="background:' + renk.bg + '">' + renk.emoji + '</div>' +
+                    '<div class="klasor-bilgi">' +
+                        '<div class="klasor-adi">' + escapeHtml(klasor.ad) + '</div>' +
+                        '<div class="klasor-alt">' + notSayisi + ' not</div>' +
+                    '</div>' +
+                    '<div style="display:flex;gap:8px;">' +
+                        '<button onclick="event.stopPropagation();klasorSil(\''+kid+'\')" style="background:#fee2e2;color:#dc2626;width:auto;padding:6px 12px;font-size:12px;margin:0;box-shadow:none;border-radius:20px;">Sil</button>' +
+                    '</div>' +
+                '</div>';
+            });
+        }
+
+        html += notlarNav('notlar');
+        document.getElementById('app').innerHTML = html;
+    }
+
+    function renderKlasor(kid) {
+        const klasor = notlarData[kid];
+        if (!klasor) { changePage('notlar'); return; }
+        const notlar = klasor.notlar ? Object.values(klasor.notlar).sort((a,b) => b.tarih > a.tarih ? 1 : -1) : [];
+        const renkIdx = (klasor.renkIdx || 0) % KLASOR_RENKLER.length;
+        const renk = KLASOR_RENKLER[renkIdx];
+
+        let html = '<div style="margin-bottom:12px;"><button class="back-btn" onclick="changePage(\'notlar\')">← Klasörlere Dön</button></div>' +
+            '<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">' +
+                '<div style="width:48px;height:48px;background:' + renk.bg + ';border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;">' + renk.emoji + '</div>' +
+                '<div><div style="font-size:20px;font-weight:900;color:#1e293b;">' + escapeHtml(klasor.ad) + '</div>' +
+                '<div style="font-size:12px;color:#94a3b8;">' + notlar.length + ' not</div></div>' +
+            '</div>';
+
+        html += '<button onclick="notEkleModal(\''+kid+'\');" style="margin-bottom:16px;background:linear-gradient(135deg,#f59e0b,#f97316);">✏️ Yeni Not Ekle</button>';
+
+        if (notlar.length === 0) {
+            html += '<div style="text-align:center;padding:30px;color:#94a3b8;">' +
+                '<div style="font-size:40px;margin-bottom:10px;">📝</div>' +
+                '<div style="font-weight:600;">Henüz not yok</div></div>';
+        } else {
+            notlar.forEach(not => {
+                html += '<div class="not-kart">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+                        '<div class="not-baslik">' + escapeHtml(not.baslik) + '</div>' +
+                        '<button onclick="notSil(\''+kid+'\',\''+not.id+'\')" style="background:#fee2e2;color:#dc2626;width:auto;padding:4px 10px;font-size:11px;margin:0;box-shadow:none;border-radius:20px;flex-shrink:0;">Sil</button>' +
+                    '</div>';
+                if (not.metin) html += '<div class="not-metin">' + escapeHtml(not.metin) + '</div>';
+                if (not.fotolar && not.fotolar.length > 0) {
+                    html += '<div class="not-foto-grid">';
+                    not.fotolar.forEach(f => {
+                        html += '<div class="not-foto-item" onclick="fotoBuyukGoster(this.querySelector(\'img\').src)">' +
+                            '<img src="' + f + '" loading="lazy">' +
+                        '</div>';
+                    });
+                    html += '</div>';
+                }
+                html += '<div class="not-tarih">' + formatDateTR(not.tarih.substring(0,10)) + '</div>' +
+                '</div>';
+            });
+        }
+
+        html += notlarNav('notlar');
+        document.getElementById('app').innerHTML = html;
+    }
+
+    function klasorEkle() {
+        const ad = prompt('Klasör adı girin:');
+        if (!ad || !ad.trim()) return;
+        const kid = 'k_' + Date.now();
+        const renkIdx = Object.keys(notlarData).length % KLASOR_RENKLER.length;
+        notlarRef.child(kid).set({ ad: ad.trim(), renkIdx, notlar: {} })
+            .then(() => syncGoster('ok'))
+            .catch(() => syncGoster('hata'));
+    }
+
+    function klasorSil(kid) {
+        const klasor = notlarData[kid];
+        if (!confirm((klasor?.ad || 'Bu klasör') + ' silinsin mi? İçindeki tüm notlar da silinir!')) return;
+        notlarRef.child(kid).remove()
+            .then(() => syncGoster('ok'))
+            .catch(() => syncGoster('hata'));
+    }
+
+    function notFormKapat() {
+        const el = document.getElementById('notFormOverlay');
+        if(el) el.remove();
+    }
+
+    function notEkleModal(kid) {
+        // Geçici form göster
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:flex-end;';
+        overlay.id = 'notFormOverlay';
+        overlay.innerHTML = '<div style="background:#fff;border-radius:24px 24px 0 0;padding:24px;width:100%;max-height:85vh;overflow-y:auto;">' +
+            '<div style="font-size:18px;font-weight:800;color:#1e293b;margin-bottom:16px;">✏️ Yeni Not</div>' +
+            '<input type="text" id="notBaslikInput" placeholder="Başlık" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:14px;font-size:14px;margin-bottom:10px;">' +
+            '<textarea id="notMetinInput" placeholder="Not içeriği..." rows="5" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:14px;font-size:14px;margin-bottom:10px;resize:none;"></textarea>' +
+            '<div style="margin-bottom:12px;">' +
+                '<div style="font-size:13px;color:#64748b;margin-bottom:8px;font-weight:600;">📷 Fotoğraf Ekle (isteğe bağlı)</div>' +
+                '<input type="file" id="notFotoInput" accept="image/*" multiple style="width:100%;padding:8px;border:1px dashed #e2e8f0;border-radius:12px;font-size:13px;">' +
+                '<div id="notFotoOnizleme" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;"></div>' +
+            '</div>' +
+            '<div style="display:flex;gap:10px;">' +
+                '<button onclick="notKaydet(\''+kid+'\');" style="flex:2;background:linear-gradient(135deg,#f59e0b,#f97316);">💾 Kaydet</button>' +
+                '<button onclick="notFormKapat()" style="flex:1;background:#f1f5f9;color:#64748b;box-shadow:none;">İptal</button>' +
+            '</div>' +
+        '</div>';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', e => { if(e.target===overlay) notFormKapat(); });
+
+        // Fotoğraf önizleme
+        document.getElementById('notFotoInput').addEventListener('change', function() {
+            const prev = document.getElementById('notFotoOnizleme');
+            prev.innerHTML = '';
+            Array.from(this.files).slice(0,6).forEach(file => {
+                const r = new FileReader();
+                r.onload = e => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.cssText = 'width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;';
+                    prev.appendChild(img);
+                };
+                r.readAsDataURL(file);
+            });
+        });
+
+        window._notKlasId = kid;
+    }
+
+    async function notKaydet(kid) {
+        const baslik = document.getElementById('notBaslikInput')?.value?.trim();
+        const metin = document.getElementById('notMetinInput')?.value?.trim() || '';
+        if (!baslik) { alert('Başlık girin!'); return; }
+
+        const fotoInput = document.getElementById('notFotoInput');
+        const files = fotoInput ? Array.from(fotoInput.files) : [];
+        let fotolar = [];
+
+        // Fotoğrafları sıkıştır
+        if (files.length > 0) {
+            syncGoster('yukleniyor');
+            fotolar = await Promise.all(files.slice(0,6).map(file => new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const max = 800;
+                        const ratio = Math.min(max/img.width, max/img.height, 1);
+                        canvas.width = img.width * ratio;
+                        canvas.height = img.height * ratio;
+                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.65));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            })));
+        }
+
+        const nid = 'n_' + Date.now();
+        const not = { id:nid, baslik, metin, fotolar, tarih: new Date().toISOString() };
+        notFormKapat();
+        syncGoster('yukleniyor');
+        notlarRef.child(kid).child('notlar').child(nid).set(not)
+            .then(() => syncGoster('ok'))
+            .catch(() => syncGoster('hata'));
+    }
+
+    function notSil(kid, nid) {
+        if (!confirm('Bu not silinsin mi?')) return;
+        notlarRef.child(kid).child('notlar').child(nid).remove()
+            .then(() => syncGoster('ok'))
+            .catch(() => syncGoster('hata'));
+    }
+
+    function fotoBuyukGoster(src) {
+        const div = document.createElement('div');
+        div.className = 'foto-buyuk-overlay';
+        div.innerHTML = '<button class="foto-buyuk-kapat" onclick="this.parentElement.remove()">✕</button>' +
+            '<img src="' + src + '">';
+        document.body.appendChild(div);
+        div.addEventListener('click', e => { if(e.target===div) div.remove(); });
     }
 
     if(sifreKontrolEt()){baslat();}
