@@ -23,7 +23,7 @@
         .stat-card { background: #ffffff; border-radius: 20px; padding: 12px 8px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .stat-number { font-size: 28px; font-weight: 800; color: #f59e0b; }
         .stat-label { font-size: 11px; color: #64748b; margin-top: 6px; }
-        .search-box { background: #ffffff; border-radius: 30px; padding: 8px 18px; border: 1px solid #e2e8f0; margin-bottom: 16px; display: flex; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .search-box { background: #ffffff; border-radius: 30px; padding: 12px 18px; border: 1px solid #e2e8f0; margin-bottom: 16px; display: flex; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .search-box input { background: transparent; border: none; color: #1e293b; font-size: 15px; flex: 1; outline: none; }
         .filter-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
         .filter-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 40px; padding: 8px 16px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
@@ -336,7 +336,7 @@
             html += `<div class="project-card" onclick="goToDetail('${rec.id}')">
                 <div class="project-header"><span class="customer-name">${escapeHtml(rec.musteri)||'İsimsiz'}</span><span class="status-badge status-${dc}">${badge}</span></div>
                 <div class="project-location">📍 ${escapeHtml(rec.adres)||'-'}</div>
-                <div class="project-footer"><span>⚙️ ${escapeHtml(rec.tip)||'-'}</span><span>📅 ${rec.baslamaTarihi?formatDateTR(rec.baslamaTarihi):'-'}</span></div>
+                <div class="project-footer"><span>🏢 ${escapeHtml(rec.binaAdi)||'-'}</span><span>📅 ${rec.baslamaTarihi?formatDateTR(rec.baslamaTarihi):'-'}</span></div>
             </div>`;
         });
         html += `</div><div class="bottom-nav">
@@ -1111,7 +1111,11 @@
             '<textarea id="fnDuzMetin" placeholder="Not..." rows="4" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:14px;font-size:14px;margin-bottom:10px;resize:none;">'+escapeHtml(not.metin||'')+'</textarea>' +
             fotoHtml +
             '<div style="margin-bottom:12px;"><div style="font-size:11px;color:#64748b;margin-bottom:4px;font-weight:600;">📷 Yeni fotoğraf ekle</div>' +
-            '<input type="file" id="fnDuzFoto" accept="image/*" multiple style="width:100%;padding:8px;border:1px dashed #e2e8f0;border-radius:12px;font-size:13px;"></div>' +
+            '<div style="display:flex;gap:8px;margin-bottom:4px;">' +
+                    '<button type="button" onclick="document.getElementById(\'fnDuzFoto\').removeAttribute(\'capture\');document.getElementById(\'fnDuzFoto\').click()" style="flex:1;background:#f1f5f9;color:#1e293b;padding:10px;border-radius:12px;font-size:13px;box-shadow:none;margin:0;">🖼️ Galeri</button>' +
+                    '<button type="button" onclick="document.getElementById(\'fnDuzFoto\').setAttribute(\'capture\',\'environment\');document.getElementById(\'fnDuzFoto\').click()" style="flex:1;background:#f1f5f9;color:#1e293b;padding:10px;border-radius:12px;font-size:13px;box-shadow:none;margin:0;">📷 Kamera</button>' +
+                '</div>' +
+                '<input type="file" id="fnDuzFoto" accept="image/*" multiple style="display:none;"></div>' +
             '<div style="display:flex;gap:10px;">' +
             '<button onclick="fnDuzKaydet(\''+nid+'\')" style="flex:2;background:linear-gradient(135deg,#f59e0b,#f97316);">💾 Kaydet</button>' +
             '<button onclick="fnDuzKapat()" style="flex:1;background:#f1f5f9;color:#64748b;box-shadow:none;">İptal</button>' +
@@ -1185,7 +1189,11 @@
                 '<textarea id="fnMetin" placeholder="Not..." rows="4" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:14px;font-size:14px;margin-bottom:10px;resize:none;"></textarea>' +
                 '<div style="margin-bottom:12px;">' +
                     '<div style="font-size:12px;color:#64748b;margin-bottom:6px;font-weight:600;">📷 Fotoğraf Ekle</div>' +
-                    '<input type="file" id="fnFoto" accept="image/*" multiple style="width:100%;padding:8px;border:1px dashed #e2e8f0;border-radius:12px;font-size:13px;">' +
+                    '<div style="display:flex;gap:8px;margin-bottom:8px;">' +
+                    '<button type="button" onclick="document.getElementById(\'fnFoto\').removeAttribute(\'capture\');document.getElementById(\'fnFoto\').click()" style="flex:1;background:#f1f5f9;color:#1e293b;padding:10px;border-radius:12px;font-size:13px;box-shadow:none;margin:0;">🖼️ Galeri</button>' +
+                    '<button type="button" onclick="document.getElementById(\'fnFoto\').setAttribute(\'capture\',\'environment\');document.getElementById(\'fnFoto\').click()" style="flex:1;background:#f1f5f9;color:#1e293b;padding:10px;border-radius:12px;font-size:13px;box-shadow:none;margin:0;">📷 Kamera</button>' +
+                '</div>' +
+                '<input type="file" id="fnFoto" accept="image/*" multiple style="display:none;">' +
                     '<div id="fnFotoOniz" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;"></div>' +
                 '</div>' +
                 '<div style="display:flex;gap:10px;">' +
@@ -1513,7 +1521,11 @@
             '<textarea id="notMetinInput" placeholder="Not içeriği..." rows="5" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:14px;font-size:14px;margin-bottom:10px;resize:none;"></textarea>' +
             '<div style="margin-bottom:12px;">' +
                 '<div style="font-size:13px;color:#64748b;margin-bottom:8px;font-weight:600;">📷 Fotoğraf Ekle (isteğe bağlı)</div>' +
-                '<input type="file" id="notFotoInput" accept="image/*" multiple style="width:100%;padding:8px;border:1px dashed #e2e8f0;border-radius:12px;font-size:13px;">' +
+                '<div style="display:flex;gap:8px;margin-bottom:8px;">' +
+                    '<button type="button" onclick="document.getElementById(\'notFotoInput\').removeAttribute(\'capture\');document.getElementById(\'notFotoInput\').click()" style="flex:1;background:#f1f5f9;color:#1e293b;padding:10px;border-radius:12px;font-size:13px;box-shadow:none;margin:0;">🖼️ Galeri</button>' +
+                    '<button type="button" onclick="document.getElementById(\'notFotoInput\').setAttribute(\'capture\',\'environment\');document.getElementById(\'notFotoInput\').click()" style="flex:1;background:#f1f5f9;color:#1e293b;padding:10px;border-radius:12px;font-size:13px;box-shadow:none;margin:0;">📷 Kamera</button>' +
+                '</div>' +
+                '<input type="file" id="notFotoInput" accept="image/*" multiple style="display:none;">' +
                 '<div id="notFotoOnizleme" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;"></div>' +
             '</div>' +
             '<div style="display:flex;gap:10px;">' +
@@ -1616,7 +1628,11 @@
                 fotoOnizlemeHtml +
                 '<div style="margin-bottom:12px;">' +
                     '<div style="font-size:12px;color:#64748b;margin-bottom:6px;font-weight:600;">📷 Yeni Fotoğraf Ekle (isteğe bağlı)</div>' +
-                    '<input type="file" id="duzFotoInput" accept="image/*" multiple style="width:100%;padding:8px;border:1px dashed #e2e8f0;border-radius:12px;font-size:13px;">' +
+                    '<div style="display:flex;gap:8px;margin-bottom:8px;">' +
+                    '<button type="button" onclick="document.getElementById(\'duzFotoInput\').removeAttribute(\'capture\');document.getElementById(\'duzFotoInput\').click()" style="flex:1;background:#f1f5f9;color:#1e293b;padding:10px;border-radius:12px;font-size:13px;box-shadow:none;margin:0;">🖼️ Galeri</button>' +
+                    '<button type="button" onclick="document.getElementById(\'duzFotoInput\').setAttribute(\'capture\',\'environment\');document.getElementById(\'duzFotoInput\').click()" style="flex:1;background:#f1f5f9;color:#1e293b;padding:10px;border-radius:12px;font-size:13px;box-shadow:none;margin:0;">📷 Kamera</button>' +
+                '</div>' +
+                '<input type="file" id="duzFotoInput" accept="image/*" multiple style="display:none;">' +
                     '<div id="duzFotoOnizleme" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px;"></div>' +
                 '</div>' +
                 '<div style="display:flex;gap:10px;">' +
@@ -1729,7 +1745,11 @@
                 '<textarea id="isNotMetin" placeholder="Not..." rows="4" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:14px;font-size:14px;margin-bottom:10px;resize:none;"></textarea>' +
                 '<div style="margin-bottom:12px;">' +
                     '<div style="font-size:12px;color:#64748b;margin-bottom:6px;font-weight:600;">📷 Fotoğraf Ekle</div>' +
-                    '<input type="file" id="isNotFoto" accept="image/*" multiple style="width:100%;padding:8px;border:1px dashed #e2e8f0;border-radius:12px;font-size:13px;">' +
+                    '<div style="display:flex;gap:8px;margin-bottom:8px;">' +
+                    '<button type="button" onclick="document.getElementById(\'isNotFoto\').removeAttribute(\'capture\');document.getElementById(\'isNotFoto\').click()" style="flex:1;background:#f1f5f9;color:#1e293b;padding:10px;border-radius:12px;font-size:13px;box-shadow:none;margin:0;">🖼️ Galeri</button>' +
+                    '<button type="button" onclick="document.getElementById(\'isNotFoto\').setAttribute(\'capture\',\'environment\');document.getElementById(\'isNotFoto\').click()" style="flex:1;background:#f1f5f9;color:#1e293b;padding:10px;border-radius:12px;font-size:13px;box-shadow:none;margin:0;">📷 Kamera</button>' +
+                '</div>' +
+                '<input type="file" id="isNotFoto" accept="image/*" multiple style="display:none;">' +
                     '<div id="isNotFotoOnizleme" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;"></div>' +
                 '</div>' +
                 '<div style="display:flex;gap:10px;">' +
