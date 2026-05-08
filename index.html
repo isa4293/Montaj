@@ -20,7 +20,7 @@
         .header { text-align: center; margin-bottom: 20px; }
         .header p { font-size: 11px; color: #94a3b8; }
         .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
-        .stat-card { background: #ffffff; border-radius: 20px; padding: 12px 8px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .stat-card { background: #ffffff; border-radius: 20px; padding: 8px 8px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .stat-number { font-size: 28px; font-weight: 800; color: #f59e0b; }
         .stat-label { font-size: 11px; color: #64748b; margin-top: 6px; }
         .search-box { background: #ffffff; border-radius: 30px; padding: 12px 18px; border: 1px solid #e2e8f0; margin-bottom: 16px; display: flex; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
@@ -336,7 +336,7 @@
             html += `<div class="project-card" onclick="goToDetail('${rec.id}')">
                 <div class="project-header"><span class="customer-name">${escapeHtml(rec.musteri)||'İsimsiz'}</span><span class="status-badge status-${dc}">${badge}</span></div>
                 <div class="project-location">📍 ${escapeHtml(rec.adres)||'-'}</div>
-                <div class="project-footer"><span>🏢 ${escapeHtml(rec.binaAdi)||'-'}</span><span>📅 ${rec.baslamaTarihi?formatDateTR(rec.baslamaTarihi):'-'}</span></div>
+                <div class="project-footer"><span>⚙️ ${escapeHtml(rec.tip)||'-'}</span><span>📅 ${rec.baslamaTarihi?formatDateTR(rec.baslamaTarihi):'-'}</span></div>
             </div>`;
         });
         html += `</div><div class="bottom-nav">
