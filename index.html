@@ -20,10 +20,10 @@
         .header { text-align: center; margin-bottom: 20px; }
         .header p { font-size: 11px; color: #94a3b8; }
         .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
-        .stat-card { background: #ffffff; border-radius: 20px; padding: 8px 8px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .stat-card { background: #ffffff; border-radius: 20px; padding: 12px 8px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .stat-number { font-size: 28px; font-weight: 800; color: #f59e0b; }
         .stat-label { font-size: 11px; color: #64748b; margin-top: 6px; }
-        .search-box { background: #ffffff; border-radius: 30px; padding: 12px 18px; border: 1px solid #e2e8f0; margin-bottom: 16px; display: flex; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .search-box { background: #ffffff; border-radius: 30px; padding: 8px 18px; border: 1px solid #e2e8f0; margin-bottom: 16px; display: flex; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .search-box input { background: transparent; border: none; color: #1e293b; font-size: 15px; flex: 1; outline: none; }
         .filter-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
         .filter-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 40px; padding: 8px 16px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
@@ -1159,7 +1159,7 @@
                         canvas.width = img.width * ratio;
                         canvas.height = img.height * ratio;
                         canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.85));
+                        resolve(canvas.toDataURL('image/jpeg', 0.75));
                     };
                     img.src = e.target.result;
                 };
@@ -1235,23 +1235,9 @@
 
         let fotolar = [];
         if(files.length > 0) {
-            fotolar = await Promise.all(files.map(file => new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const max = 1600;
-                        const ratio = Math.min(max/img.width, max/img.height, 1);
-                        canvas.width = img.width * ratio;
-                        canvas.height = img.height * ratio;
-                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.85));
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            })));
+            for(const file of files) {
+                fotolar.push(await sikistirFoto(file));
+            }
         }
 
         const nid = 'n_' + Date.now();
@@ -1573,12 +1559,12 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const max = 1600;
+                        const max = 900;
                         const ratio = Math.min(max/img.width, max/img.height, 1);
                         canvas.width = img.width * ratio;
                         canvas.height = img.height * ratio;
                         canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.85));
+                        resolve(canvas.toDataURL('image/jpeg', 0.75));
                     };
                     img.src = e.target.result;
                 };
@@ -1697,12 +1683,12 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const max = 1600;
+                        const max = 900;
                         const ratio = Math.min(max/img.width, max/img.height, 1);
                         canvas.width = img.width * ratio;
                         canvas.height = img.height * ratio;
                         canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.85));
+                        resolve(canvas.toDataURL('image/jpeg', 0.75));
                     };
                     img.src = e.target.result;
                 };
@@ -1800,12 +1786,12 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const max = 1600;
+                        const max = 900;
                         const ratio = Math.min(max/img.width, max/img.height, 1);
                         canvas.width = img.width * ratio;
                         canvas.height = img.height * ratio;
                         canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.85));
+                        resolve(canvas.toDataURL('image/jpeg', 0.75));
                     };
                     img.src = e.target.result;
                 };
